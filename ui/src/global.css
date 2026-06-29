@@ -35,3 +35,19 @@ html {
     margin-top: 12px;
     min-width: calc(100% - 48px);
 }
+
+@media print {
+    header,
+    nav,
+    .reports-no-print {
+        display: none !important;
+    }
+
+    main {
+        padding: 0 !important;
+    }
+
+    .reports-page {
+        max-width: none !important;
+    }
+}

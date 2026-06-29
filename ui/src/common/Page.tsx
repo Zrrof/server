@@ -18,6 +18,7 @@ import LabelIcon from '@material-ui/icons/Label';
 import DashboardManageIcon from '@material-ui/icons/ListAlt';
 import TimeLineIcon from '@material-ui/icons/Timeline';
 import CalendarIcon from '@material-ui/icons/CalendarToday';
+import ReportsIcon from '@material-ui/icons/Assessment';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import {ListSubheader, Menu} from '@material-ui/core';
@@ -166,6 +167,12 @@ export const Page: React.FC = ({children}) => {
                     </ListItemIcon>
                     <ListItemText primary="Calendar" />
                 </ListItem>
+                <ListItem button component={routerLink('/reports')}>
+                    <ListItemIcon>
+                        <ReportsIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Reports" />
+                </ListItem>
             </List>
             <Divider />
             <List subheader={<ListSubheader>User</ListSubheader>} dense={true}>
@@ -224,6 +231,9 @@ export const Page: React.FC = ({children}) => {
                             </Route>
                             <Route exact path="/timesheet/calendar">
                                 Timesheet / Calendar
+                            </Route>
+                            <Route exact path="/reports">
+                                Reports
                             </Route>
                             <Route exact path="/user/settings">
                                 User / Settings

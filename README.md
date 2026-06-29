@@ -63,3 +63,7 @@ may be able to read it. Have a look at our [Install Guide](https://traggo.net/in
 ## Versioning
 We use [SemVer](http://semver.org/) for versioning. For the versions available, see the
 [tags on this repository](https://github.com/traggo/server/tags).
+
+## Reports
+
+The UI includes a `/reports` page for tabular time-span reporting. It reuses the existing time-span API, supports client-side search, filtering, sorting, pagination, column visibility, summary totals, CSV export, and a print/PDF-friendly layout. Report preferences such as filters, sorting, columns, and page size are stored in `localStorage`.
