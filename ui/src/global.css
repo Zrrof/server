@@ -35,3 +35,31 @@ html {
     margin-top: 12px;
     min-width: calc(100% - 48px);
 }
+
+@media screen {
+    .reports-print-header {
+        display: none;
+    }
+}
+
+@media print {
+    header,
+    nav,
+    .reports-no-print,
+    .reports-screen-title {
+        display: none !important;
+    }
+
+    main {
+        padding: 0 !important;
+    }
+
+    .reports-page {
+        max-width: none !important;
+    }
+
+    .reports-print-header {
+        display: block;
+        margin-bottom: 16px;
+    }
+}
