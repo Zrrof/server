@@ -10,5 +10,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 node_modules
+.cache/
+ui/.yarn-cache/
 __generated__
 *-packr.go
