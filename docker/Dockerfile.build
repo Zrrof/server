@@ -1,2 +1,21 @@
-FROM golang:1.24
-ghcr.io/zrrof/server:latest
+FROM golang:1.24 AS builder
+
+WORKDIR /src
+
+COPY . .
+
+RUN go mod download
+
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=$TARGETARCH \
+    go build -tags="netgo osusergo sqlite_omit_load_extension" \
+    -o /traggo .
+
+FROM scratch
+
+WORKDIR /opt/traggo
+
+COPY --from=builder /traggo /opt/traggo/
+
+EXPOSE 3030
+
+ENTRYPOINT ["./traggo"]
