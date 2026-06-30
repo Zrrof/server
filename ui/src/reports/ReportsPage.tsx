@@ -3,8 +3,8 @@ import {useQuery} from '@apollo/react-hooks';
 import {Button, Paper, Typography} from '@material-ui/core';
 import * as gqlTimeSpan from '../gql/timeSpan';
 import {CenteredSpinner} from '../common/CenteredSpinner';
-import {ReportSettings, ReportTimeSpan} from './types';
-import {DEFAULT_COLUMNS, DEFAULT_FILTERS, filterEntries, projectValue, sortEntries, userValue} from './utils/reportUtils';
+import {ReportFilters, ReportSettings, ReportTimeSpan} from './types';
+import {DEFAULT_COLUMNS, DEFAULT_FILTERS, filterEntries, sortEntries} from './utils/reportUtils';
 import {ReportsFilters} from './ReportsFilters';
 import {ReportsSummary} from './ReportsSummary';
 import {ReportsTable} from './ReportsTable';
@@ -36,14 +36,24 @@ interface ReportsTimeSpansVariables {
     cursor: Partial<ReportsCursor>;
 }
 
+const withoutLegacyFilters = (filters: Partial<ReportFilters>) => {
+    const normalized = {...DEFAULT_FILTERS, ...filters} as ReportFilters & {user?: string; project?: string};
+    delete normalized.user;
+    delete normalized.project;
+    return normalized;
+};
+
+const readSettings = (): ReportSettings => {
+    try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') as Partial<ReportSettings>;
+        return {...DEFAULT_SETTINGS, ...saved, filters: withoutLegacyFilters(saved.filters || {})};
+    } catch (e) {
+        return DEFAULT_SETTINGS;
+    }
+};
+
 export const ReportsPage = () => {
-    const [settings, setSettings] = React.useState<ReportSettings>(() => {
-        try {
-            return {...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')};
-        } catch (e) {
-            return DEFAULT_SETTINGS;
-        }
-    });
+    const [settings, setSettings] = React.useState<ReportSettings>(readSettings);
     const {data, loading, error, fetchMore} = useQuery<ReportsTimeSpansData, ReportsTimeSpansVariables>(gqlTimeSpan.TimeSpans, {variables: {cursor: {pageSize: 500}}});
     const requestedLength = React.useRef<number | null>(null);
     React.useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(settings)); }, [settings]);
@@ -67,8 +77,6 @@ export const ReportsPage = () => {
     if (error) { return <Typography color="error">Reports konnten nicht geladen werden: {error.message}</Typography>; }
     const entries: ReportTimeSpan[] = (data && data.timeSpans && data.timeSpans.timeSpans) || [];
     const tags = Array.from(new Set(entries.reduce((all: string[], entry) => all.concat((entry.tags || []).map((tag) => tag.key)), []))).sort();
-    const users = Array.from(new Set(entries.map(userValue).filter(Boolean))).sort();
-    const projects = Array.from(new Set(entries.map(projectValue).filter(Boolean))).sort();
     const filtered = sortEntries(filterEntries(entries, settings.filters), settings.sort);
     return (
         <div style={{maxWidth: 1600, margin: '0 auto'}} className="reports-page">
@@ -78,8 +86,6 @@ export const ReportsPage = () => {
                 <ReportsFilters
                     filters={settings.filters}
                     tags={tags}
-                    users={users}
-                    projects={projects}
                     onChange={(filters) => setSettings({...settings, filters})}
                 />
                 <div style={{marginTop: 16}}>

@@ -33,6 +33,7 @@ export type DatePreset =
 
 export type DurationPreset = 'all' | '30m' | '1h' | '2h' | '4h' | 'custom';
 export type GroupKey = 'none' | 'day' | 'week' | 'month' | 'year' | 'project' | 'user';
+export type ChartKey = 'none' | 'day' | 'week' | 'month' | 'project' | 'tag' | 'user';
 
 export interface ReportFilters {
     search: string;
@@ -40,8 +41,6 @@ export interface ReportFilters {
     customStart: string;
     customEnd: string;
     tags: string[];
-    user: string;
-    project: string;
     runningOnly: boolean;
     durationPreset: DurationPreset;
     customDurationMinutes: number;

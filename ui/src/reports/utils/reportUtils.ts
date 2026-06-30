@@ -19,8 +19,6 @@ export const DEFAULT_FILTERS: ReportFilters = {
     customStart: '',
     customEnd: '',
     tags: [],
-    user: 'Alle',
-    project: 'Alle',
     runningOnly: false,
     durationPreset: 'all',
     customDurationMinutes: 0,
@@ -29,9 +27,18 @@ export const DEFAULT_FILTERS: ReportFilters = {
 
 export const tagsToText = (entry: ReportTimeSpan) => (entry.tags || []).map((tag) => tag.value).join(', ');
 export const tagValue = (entry: ReportTimeSpan, key: string) => {
-    const tag = (entry.tags || []).find((entryTag) => entryTag.key.toLowerCase() === key);
+    const normalizedKey = key.toLowerCase();
+    const tag = (entry.tags || []).find((entryTag) => entryTag.key.toLowerCase() === normalizedKey);
     return tag ? tag.value : '';
 };
+export const labelKeys = (entries: ReportTimeSpan[]) => entries.reduce<string[]>((keys, entry) => {
+    (entry.tags || []).forEach((tag) => {
+        if (!keys.some((key) => key.toLowerCase() === tag.key.toLowerCase())) {
+            keys.push(tag.key);
+        }
+    });
+    return keys;
+}, []).sort((a, b) => a.localeCompare(b));
 export const projectValue = (entry: ReportTimeSpan) => tagValue(entry, 'project') || tagValue(entry, 'projekt');
 export const userValue = (entry: ReportTimeSpan) => tagValue(entry, 'user') || tagValue(entry, 'benutzer');
 export const durationMs = (entry: ReportTimeSpan, now = moment()) => Math.max(0, (entry.end ? moment(entry.end) : now).diff(moment(entry.start)));
@@ -79,8 +86,6 @@ export const filterEntries = (entries: ReportTimeSpan[], filters: ReportFilters,
         if (range.end && start.isAfter(range.end)) { return false; }
         if (filters.runningOnly && entry.end) { return false; }
         if (filters.tags.length > 0 && !filters.tags.every((tag) => (entry.tags || []).some((entryTag) => entryTag.key === tag))) { return false; }
-        if (filters.user !== 'Alle' && userValue(entry) !== filters.user) { return false; }
-        if (filters.project !== 'Alle' && projectValue(entry) !== filters.project) { return false; }
         if (minDuration > 0 && durationMs(entry, now) <= minDuration) { return false; }
         if (search) {
             const haystack = [entry.note, tagsToText(entry), projectValue(entry), userValue(entry)].join(' ').toLowerCase();
@@ -88,6 +93,14 @@ export const filterEntries = (entries: ReportTimeSpan[], filters: ReportFilters,
         }
         return true;
     });
+};
+
+export const activeFilterLabel = (filters: ReportFilters) => {
+    const parts: string[] = [];
+    if (filters.search) { parts.push(`Search: ${filters.search}`); }
+    if (filters.tags.length) { parts.push(`Tags: ${filters.tags.join(', ')}`); }
+    if (filters.runningOnly) { parts.push('Only running'); }
+    return parts.length ? parts.join(' · ') : 'No filters';
 };
 
 export const sortEntries = (entries: ReportTimeSpan[], sort: ReportSort | null, now = moment()) => {
@@ -125,4 +138,19 @@ export const summarizeEntries = (entries: ReportTimeSpan[], now = moment()) => {
         longestMs: durations.length ? Math.max(...durations) : 0,
         shortestMs: durations.length ? Math.min(...durations) : 0,
     };
+};
+
+export const chartRows = (entries: ReportTimeSpan[], chart: 'day' | 'week' | 'month' | 'project' | 'tag' | 'user') => {
+    const rows = entries.reduce<Record<string, number>>((result, entry) => {
+        const start = moment(entry.start);
+        const keys = chart === 'tag' ? (entry.tags || []).map((tag) => tag.key) : [
+            chart === 'day' ? start.format('YYYY-MM-DD') :
+            chart === 'week' ? `${start.isoWeekYear()}-W${String(start.isoWeek()).padStart(2, '0')}` :
+            chart === 'month' ? start.format('YYYY-MM') :
+            chart === 'project' ? (projectValue(entry) || 'No project') :
+            userValue(entry) || 'No user',
+        ];
+        return keys.reduce((next, key) => ({...next, [key]: (next[key] || 0) + durationMs(entry) / 3600000}), result);
+    }, {});
+    return Object.keys(rows).sort().map((name) => ({name, hours: Math.round(rows[name] * 100) / 100}));
 };

@@ -2,7 +2,7 @@ import * as React from 'react';
 import moment from 'moment';
 import {Checkbox, FormControl, InputLabel, MenuItem, Paper, Select, Table, TableBody, TableCell, TableFooter, TableHead, TableRow, Typography} from '@material-ui/core';
 import {ReportColumn, ReportSort, ReportTimeSpan, SortKey} from './types';
-import {durationMs, formatDuration, projectValue, summarizeEntries, tagsToText, userValue} from './utils/reportUtils';
+import {durationMs, formatDuration, labelKeys, projectValue, summarizeEntries, tagsToText, tagValue, userValue} from './utils/reportUtils';
 
 const sortable: Record<string, SortKey> = {date: 'date', start: 'start', end: 'end', duration: 'duration', description: 'description', user: 'user', project: 'project', tags: 'tagCount'};
 
@@ -17,7 +17,8 @@ export const ReportsTable: React.FC<{
 }> = ({entries, columns, pageSize, sort, onSort, onPageSize, onColumns}) => {
     const [page, setPage] = React.useState(0);
     React.useEffect(() => setPage(0), [entries, pageSize]);
-    const visibleColumns = columns.filter((column) => column.visible);
+    const labelColumns = labelKeys(entries).map((key) => ({id: `label:${key}`, label: key, visible: true}));
+    const visibleColumns = [...columns.filter((column) => column.visible), ...labelColumns];
     const paged = pageSize === 'all' ? entries : entries.slice(page * pageSize, page * pageSize + pageSize);
     const summary = summarizeEntries(entries);
     const cycleSort = (id: string) => {
@@ -38,7 +39,7 @@ export const ReportsTable: React.FC<{
             case 'project': return projectValue(entry);
             case 'user': return userValue(entry);
             case 'created': return '';
-            default: return '';
+            default: return id.indexOf('label:') === 0 ? tagValue(entry, id.slice(6)) : '';
         }
     };
     return (
