@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  traggo:
+    image: traggo-reporting:local
+    build:
+      # Portainer can build this remote Git context even when only this Compose
+      # file is uploaded. Push the selected branch before deploying the stack.
+      context: "${TRAGGO_BUILD_CONTEXT:-https://github.com/Zrrof/server.git#codex/erweitere-traggo-um-reporting-modul-w7ofog}"
+      dockerfile: docker/Dockerfile.portainer
+    restart: unless-stopped
+    environment:
+      TRAGGO_PORT: "3030"
+      TRAGGO_DEFAULT_USER_NAME: "${TRAGGO_DEFAULT_USER_NAME:-admin}"
+      TRAGGO_DEFAULT_USER_PASS: "${TRAGGO_DEFAULT_USER_PASS:-CHANGE_ME}"
+      TRAGGO_PASS_STRENGTH: "${TRAGGO_PASS_STRENGTH:-10}"
+      TRAGGO_LOG_LEVEL: "${TRAGGO_LOG_LEVEL:-info}"
+      TRAGGO_DATABASE_DIALECT: "sqlite3"
+      TRAGGO_DATABASE_CONNECTION: "data/traggo.db"
+    ports:
+      - "${TRAGGO_HTTP_PORT:-3030}:3030"
+    volumes:
+      - traggo-data:/opt/traggo/data
+
+volumes:
+  traggo-data:
+    name: "${TRAGGO_DATA_VOLUME:-traggo-reporting-data}"
