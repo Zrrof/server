@@ -1,0 +1,37 @@
+FROM node:20-bookworm AS ui-builder
+
+WORKDIR /app
+COPY schema.graphql ./
+COPY ui/package.json ui/yarn.lock ./ui/
+RUN npm install --global yarn@1.22.22 \
+    && cd ui \
+    && yarn install --frozen-lockfile
+
+COPY ui ./ui
+RUN cd ui \
+    && yarn generate \
+    && NODE_OPTIONS=--openssl-legacy-provider yarn build
+
+FROM golang:1.25-bookworm AS server-builder
+
+WORKDIR /app
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+COPY --from=ui-builder /app/ui/build ./ui/build
+
+RUN go run github.com/99designs/gqlgen@v0.17.85 \
+    && CGO_ENABLED=1 go build \
+        -a \
+        -tags "netgo osusergo sqlite_omit_load_extension" \
+        -ldflags '-s -w -linkmode external -extldflags "-static" -X main.BuildMode=prod -X main.BuildVersion=portainer' \
+        -o /traggo
+
+FROM scratch
+
+WORKDIR /opt/traggo
+COPY --from=server-builder /traggo ./traggo
+
+EXPOSE 3030
+ENTRYPOINT ["./traggo"]

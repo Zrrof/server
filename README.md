@@ -66,4 +66,16 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 
 ## Reports
 
+The UI includes a `/reports` page for tabular time-span reporting. It reuses the existing time-span API and keeps report preferences such as filters, sorting, column order/visibility, charts, collapsed groups, and page size in `localStorage`.
+
+Reports supports:
+
+- client-side search across description, tags, project, user, and date values
+- period, tag, user, project, running-entry, and duration filters
+- grouping by day, week, month, year, project, or user with collapsible group rows
+- summary cards for total hours, entry counts, averages, longest/shortest entry, current filter, and visible entries
+- optional charts for hours per day, week, month, project, tag, or user using the existing Recharts dependency
+- CSV export of the currently filtered data as UTF-8 semicolon-separated values
+- XLSX export of the currently filtered data with `exceljs`, including a frozen header, autofilter, formatted date/duration columns, automatic column widths, and a summary row
+- print/PDF mode that hides navigation and controls while showing the title, print date, active filter, summary, and table
 The UI includes a `/reports` page for tabular time-span reporting. It reuses the existing time-span API, supports client-side search, filtering, sorting, pagination, column visibility, summary totals, CSV export, and a print/PDF-friendly layout. Report preferences such as filters, sorting, columns, and page size are stored in `localStorage`.

@@ -16,7 +16,9 @@ export const ReportsSummary: React.FC<{entries: ReportTimeSpan[]}> = ({entries})
             {cards.map(([label, value]) => (
                 <Grid item xs={12} sm={6} md={3} key={label}>
                     <Paper style={{padding: 16}}>
-                        <Typography color="textSecondary" variant="subtitle2">{label}</Typography>
+                        <Typography color="textSecondary" variant="subtitle2">
+                            {label}
+                        </Typography>
                         <Typography variant="h5">{value}</Typography>
                     </Paper>
                 </Grid>
