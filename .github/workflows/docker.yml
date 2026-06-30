@@ -29,5 +29,6 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: .
+          file: ./docker/Dockerfile   # <-- DIESE ZEILE FEHLT
           push: true
           tags: ghcr.io/zrrof/server:latest
