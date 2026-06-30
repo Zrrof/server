@@ -83,7 +83,7 @@ export const filterEntries = (entries: ReportTimeSpan[], filters: ReportFilters,
         if (filters.project !== 'Alle' && projectValue(entry) !== filters.project) { return false; }
         if (minDuration > 0 && durationMs(entry, now) <= minDuration) { return false; }
         if (search) {
-            const haystack = [entry.note, tagsToText(entry), projectValue(entry), userValue(entry), moment(entry.start).format('YYYY-MM-DD HH:mm')].join(' ').toLowerCase();
+            const haystack = [entry.note, tagsToText(entry), projectValue(entry), userValue(entry)].join(' ').toLowerCase();
             if (!haystack.includes(search)) { return false; }
         }
         return true;
@@ -125,69 +125,4 @@ export const summarizeEntries = (entries: ReportTimeSpan[], now = moment()) => {
         longestMs: durations.length ? Math.max(...durations) : 0,
         shortestMs: durations.length ? Math.min(...durations) : 0,
     };
-};
-
-export const activeFilterLabel = (filters: ReportFilters) => {
-    const parts: string[] = [];
-    if (filters.search) { parts.push(`Search: ${filters.search}`); }
-    if (filters.tags.length) { parts.push(`Tags: ${filters.tags.join(', ')}`); }
-    if (filters.user !== 'Alle') { parts.push(`User: ${filters.user}`); }
-    if (filters.project !== 'Alle') { parts.push(`Project: ${filters.project}`); }
-    if (filters.runningOnly) { parts.push('Only running'); }
-    return parts.length ? parts.join(' · ') : 'No filters';
-};
-
-export const groupEntries = (entries: ReportTimeSpan[], groupBy: ReportFilters['groupBy']) => {
-    if (groupBy === 'none') {
-        return [{id: 'all', label: 'All entries', entries, totalMs: summarizeEntries(entries).totalMs, count: entries.length}];
-    }
-    const groups = entries.reduce<Record<string, ReportTimeSpan[]>>((result, entry) => {
-        const start = moment(entry.start);
-        let id = '';
-        switch (groupBy) {
-            case 'day':
-                id = start.format('YYYY-MM-DD');
-                break;
-            case 'week':
-                id = `${start.isoWeekYear()}-W${String(start.isoWeek()).padStart(2, '0')}`;
-                break;
-            case 'month':
-                id = start.format('YYYY-MM');
-                break;
-            case 'year':
-                id = start.format('YYYY');
-                break;
-            case 'project':
-                id = projectValue(entry) || 'No project';
-                break;
-            case 'user':
-                id = userValue(entry) || 'No user';
-                break;
-            default:
-                id = 'all';
-        }
-        return {...result, [id]: [...(result[id] || []), entry]};
-    }, {});
-    return Object.keys(groups).sort().map((id) => ({
-        id,
-        label: id,
-        entries: groups[id],
-        totalMs: summarizeEntries(groups[id]).totalMs,
-        count: groups[id].length,
-    }));
-};
-
-export const chartRows = (entries: ReportTimeSpan[], chart: 'day' | 'week' | 'month' | 'project' | 'tag' | 'user') => {
-    const rows = entries.reduce<Record<string, number>>((result, entry) => {
-        const start = moment(entry.start);
-        const keys = chart === 'tag' ? (entry.tags || []).map((tag) => tag.key) : [
-            chart === 'day' ? start.format('YYYY-MM-DD') :
-            chart === 'week' ? `${start.isoWeekYear()}-W${String(start.isoWeek()).padStart(2, '0')}` :
-            chart === 'month' ? start.format('YYYY-MM') :
-            chart === 'project' ? (projectValue(entry) || 'No project') :
-            userValue(entry) || 'No user',
-        ];
-        return keys.reduce((next, key) => ({...next, [key]: (next[key] || 0) + durationMs(entry) / 3600000}), result);
-    }, {});
-    return Object.keys(rows).sort().map((name) => ({name, hours: Math.round(rows[name] * 100) / 100}));
 };

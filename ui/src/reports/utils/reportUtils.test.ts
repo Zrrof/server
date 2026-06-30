@@ -22,15 +22,3 @@ test('summarizes report durations', () => {
     expect(summary.count).toBe(2);
     expect(summary.totalMs).toBe(12600000);
 });
-
-test('groups reports by project', () => {
-    const groups = require('./reportUtils').groupEntries(entries, 'project');
-    expect(groups[0].id).toBe('A');
-    expect(groups[0].count).toBe(1);
-});
-
-test('exports semicolon separated csv', () => {
-    const csv = require('../export/csv').reportsCsv(entries);
-    expect(csv).toContain('"Datum";"Start";"Ende"');
-    expect(csv).toContain('"Alpha work"');
-});

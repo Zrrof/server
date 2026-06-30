@@ -33,7 +33,6 @@ export type DatePreset =
 
 export type DurationPreset = 'all' | '30m' | '1h' | '2h' | '4h' | 'custom';
 export type GroupKey = 'none' | 'day' | 'week' | 'month' | 'year' | 'project' | 'user';
-export type ChartKey = 'none' | 'day' | 'week' | 'month' | 'project' | 'tag' | 'user';
 
 export interface ReportFilters {
     search: string;
@@ -55,19 +54,9 @@ export interface ReportColumn {
     visible: boolean;
 }
 
-export interface ReportGroup {
-    id: string;
-    label: string;
-    entries: ReportTimeSpan[];
-    totalMs: number;
-    count: number;
-}
-
 export interface ReportSettings {
     sort: ReportSort | null;
     columns: ReportColumn[];
     pageSize: number | 'all';
     filters: ReportFilters;
-    collapsedGroups: string[];
-    chart: ChartKey;
 }

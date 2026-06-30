@@ -78,3 +78,4 @@ Reports supports:
 - CSV export of the currently filtered data as UTF-8 semicolon-separated values
 - XLSX export of the currently filtered data with `exceljs`, including a frozen header, autofilter, formatted date/duration columns, automatic column widths, and a summary row
 - print/PDF mode that hides navigation and controls while showing the title, print date, active filter, summary, and table
+The UI includes a `/reports` page for tabular time-span reporting. It reuses the existing time-span API, supports client-side search, filtering, sorting, pagination, column visibility, summary totals, CSV export, and a print/PDF-friendly layout. Report preferences such as filters, sorting, columns, and page size are stored in `localStorage`.
