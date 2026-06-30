@@ -1,7 +1,16 @@
 import ExcelJS from 'exceljs';
 import moment from 'moment';
 import {ReportFilters, ReportTimeSpan} from '../types';
-import {durationMs, formatDuration, labelKeys, projectValue, summarizeEntries, tagsToText, tagValue, userValue} from '../utils/reportUtils';
+import {
+    durationMs,
+    formatDuration,
+    labelKeys,
+    projectValue,
+    summarizeEntries,
+    tagsToText,
+    tagValue,
+    userValue,
+} from '../utils/reportUtils';
 
 export const buildReportsWorkbook = (entries: ReportTimeSpan[], filters: ReportFilters) => {
     const workbook = new ExcelJS.Workbook();
@@ -21,19 +30,28 @@ export const buildReportsWorkbook = (entries: ReportTimeSpan[], filters: ReportF
         {header: 'Benutzer', key: 'user', width: 20},
         ...labels.map((label, index) => ({header: label, key: `label${index}`, width: 20})),
     ];
-    sheet.spliceRows(1, 0, ['Traggo Reports'], ['Filter', JSON.stringify(filters)], ['Exported at', moment().format('YYYY-MM-DD HH:mm')], []);
+    sheet.spliceRows(
+        1,
+        0,
+        ['Traggo Reports'],
+        ['Filter', JSON.stringify(filters)],
+        ['Exported at', moment().format('YYYY-MM-DD HH:mm')],
+        []
+    );
     const headerRowNumber = 5;
-    entries.forEach((entry) => sheet.addRow([
-        moment(entry.start).toDate(),
-        moment(entry.start).format('HH:mm'),
-        entry.end ? moment(entry.end).format('HH:mm') : 'läuft',
-        formatDuration(durationMs(entry)),
-        tagsToText(entry),
-        entry.note,
-        projectValue(entry),
-        userValue(entry),
-        ...labels.map((label) => tagValue(entry, label)),
-    ]));
+    entries.forEach((entry) =>
+        sheet.addRow([
+            moment(entry.start).toDate(),
+            moment(entry.start).format('HH:mm'),
+            entry.end ? moment(entry.end).format('HH:mm') : 'läuft',
+            formatDuration(durationMs(entry)),
+            tagsToText(entry),
+            entry.note,
+            projectValue(entry),
+            userValue(entry),
+            ...labels.map((label) => tagValue(entry, label)),
+        ])
+    );
     sheet.addRow(['Summary', '', '', formatDuration(summary.totalMs), '', `${summary.count} entries`]);
     sheet.getRow(headerRowNumber).font = {bold: true};
     sheet.getRow(headerRowNumber).alignment = {vertical: 'middle'};
@@ -42,9 +60,11 @@ export const buildReportsWorkbook = (entries: ReportTimeSpan[], filters: ReportF
         to: {row: headerRowNumber, column: sheet.columns.length},
     };
     sheet.getColumn(1).numFmt = 'yyyy-mm-dd';
-    sheet.eachRow((row) => row.eachCell((cell) => {
-        cell.alignment = {vertical: 'top', wrapText: true};
-    }));
+    sheet.eachRow((row) =>
+        row.eachCell((cell) => {
+            cell.alignment = {vertical: 'top', wrapText: true};
+        })
+    );
     sheet.columns.forEach((column) => {
         let width = column.width || 10;
         if (column.eachCell) {

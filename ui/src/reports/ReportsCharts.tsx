@@ -13,13 +13,20 @@ export const ReportsCharts = React.memo<{
     onChart: (chart: ChartKey) => void;
 }>(({entries, chart, onChart}) => {
     const theme = useTheme();
-    const data = React.useMemo(() => chart === 'none' ? [] : chartRows(entries, chart), [entries, chart]);
+    const data = React.useMemo(() => (chart === 'none' ? [] : chartRows(entries, chart)), [entries, chart]);
     return (
         <Paper style={{padding: 16, marginTop: 16}} className="reports-no-print">
             <FormControl>
                 <InputLabel>Chart</InputLabel>
-                <Select value={chart} onChange={(event) => onChart(event.target.value as ChartKey)} inputProps={{'aria-label': 'Report chart'}}>
-                    {chartOptions.map((option) => <MenuItem key={option} value={option}>{option}</MenuItem>)}
+                <Select
+                    value={chart}
+                    onChange={(event) => onChart(event.target.value as ChartKey)}
+                    inputProps={{'aria-label': 'Report chart'}}>
+                    {chartOptions.map((option) => (
+                        <MenuItem key={option} value={option}>
+                            {option}
+                        </MenuItem>
+                    ))}
                 </Select>
             </FormControl>
             {chart !== 'none' ? (

@@ -31,17 +31,21 @@ export const tagValue = (entry: ReportTimeSpan, key: string) => {
     const tag = (entry.tags || []).find((entryTag) => entryTag.key.toLowerCase() === normalizedKey);
     return tag ? tag.value : '';
 };
-export const labelKeys = (entries: ReportTimeSpan[]) => entries.reduce<string[]>((keys, entry) => {
-    (entry.tags || []).forEach((tag) => {
-        if (!keys.some((key) => key.toLowerCase() === tag.key.toLowerCase())) {
-            keys.push(tag.key);
-        }
-    });
-    return keys;
-}, []).sort((a, b) => a.localeCompare(b));
+export const labelKeys = (entries: ReportTimeSpan[]) =>
+    entries
+        .reduce<string[]>((keys, entry) => {
+            (entry.tags || []).forEach((tag) => {
+                if (!keys.some((key) => key.toLowerCase() === tag.key.toLowerCase())) {
+                    keys.push(tag.key);
+                }
+            });
+            return keys;
+        }, [])
+        .sort((a, b) => a.localeCompare(b));
 export const projectValue = (entry: ReportTimeSpan) => tagValue(entry, 'project') || tagValue(entry, 'projekt');
 export const userValue = (entry: ReportTimeSpan) => tagValue(entry, 'user') || tagValue(entry, 'benutzer');
-export const durationMs = (entry: ReportTimeSpan, now = moment()) => Math.max(0, (entry.end ? moment(entry.end) : now).diff(moment(entry.start)));
+export const durationMs = (entry: ReportTimeSpan, now = moment()) =>
+    Math.max(0, (entry.end ? moment(entry.end) : now).diff(moment(entry.start)));
 export const formatDuration = (ms: number) => {
     const minutes = Math.round(ms / 60000);
     const hours = Math.floor(minutes / 60);
@@ -55,15 +59,42 @@ const dateRange = (filters: ReportFilters) => {
         case 'today':
             return {start: now.clone().startOf('day'), end: now.clone().endOf('day')};
         case 'yesterday':
-            return {start: now.clone().subtract(1, 'day').startOf('day'), end: now.clone().subtract(1, 'day').endOf('day')};
+            return {
+                start: now
+                    .clone()
+                    .subtract(1, 'day')
+                    .startOf('day'),
+                end: now
+                    .clone()
+                    .subtract(1, 'day')
+                    .endOf('day'),
+            };
         case 'thisWeek':
             return {start: now.clone().startOf('isoWeek'), end: now.clone().endOf('isoWeek')};
         case 'lastWeek':
-            return {start: now.clone().subtract(1, 'week').startOf('isoWeek'), end: now.clone().subtract(1, 'week').endOf('isoWeek')};
+            return {
+                start: now
+                    .clone()
+                    .subtract(1, 'week')
+                    .startOf('isoWeek'),
+                end: now
+                    .clone()
+                    .subtract(1, 'week')
+                    .endOf('isoWeek'),
+            };
         case 'thisMonth':
             return {start: now.clone().startOf('month'), end: now.clone().endOf('month')};
         case 'lastMonth':
-            return {start: now.clone().subtract(1, 'month').startOf('month'), end: now.clone().subtract(1, 'month').endOf('month')};
+            return {
+                start: now
+                    .clone()
+                    .subtract(1, 'month')
+                    .startOf('month'),
+                end: now
+                    .clone()
+                    .subtract(1, 'month')
+                    .endOf('month'),
+            };
         case 'thisYear':
             return {start: now.clone().startOf('year'), end: now.clone().endOf('year')};
         case 'custom':
@@ -78,18 +109,36 @@ const dateRange = (filters: ReportFilters) => {
 
 export const filterEntries = (entries: ReportTimeSpan[], filters: ReportFilters, now = moment()) => {
     const range = dateRange(filters);
-    const minDuration = filters.durationPreset === 'custom' ? filters.customDurationMinutes * 60000 : {all: 0, '30m': 1800000, '1h': 3600000, '2h': 7200000, '4h': 14400000}[filters.durationPreset];
+    const minDuration =
+        filters.durationPreset === 'custom'
+            ? filters.customDurationMinutes * 60000
+            : {all: 0, '30m': 1800000, '1h': 3600000, '2h': 7200000, '4h': 14400000}[filters.durationPreset];
     const search = filters.search.toLowerCase().trim();
     return entries.filter((entry) => {
         const start = moment(entry.start);
-        if (range.start && start.isBefore(range.start)) { return false; }
-        if (range.end && start.isAfter(range.end)) { return false; }
-        if (filters.runningOnly && entry.end) { return false; }
-        if (filters.tags.length > 0 && !filters.tags.every((tag) => (entry.tags || []).some((entryTag) => entryTag.key === tag))) { return false; }
-        if (minDuration > 0 && durationMs(entry, now) <= minDuration) { return false; }
+        if (range.start && start.isBefore(range.start)) {
+            return false;
+        }
+        if (range.end && start.isAfter(range.end)) {
+            return false;
+        }
+        if (filters.runningOnly && entry.end) {
+            return false;
+        }
+        if (
+            filters.tags.length > 0 &&
+            !filters.tags.every((tag) => (entry.tags || []).some((entryTag) => entryTag.key === tag))
+        ) {
+            return false;
+        }
+        if (minDuration > 0 && durationMs(entry, now) <= minDuration) {
+            return false;
+        }
         if (search) {
             const haystack = [entry.note, tagsToText(entry), projectValue(entry), userValue(entry)].join(' ').toLowerCase();
-            if (!haystack.includes(search)) { return false; }
+            if (!haystack.includes(search)) {
+                return false;
+            }
         }
         return true;
     });
@@ -97,25 +146,44 @@ export const filterEntries = (entries: ReportTimeSpan[], filters: ReportFilters,
 
 export const activeFilterLabel = (filters: ReportFilters) => {
     const parts: string[] = [];
-    if (filters.search) { parts.push(`Search: ${filters.search}`); }
-    if (filters.tags.length) { parts.push(`Tags: ${filters.tags.join(', ')}`); }
-    if (filters.runningOnly) { parts.push('Only running'); }
+    if (filters.search) {
+        parts.push(`Search: ${filters.search}`);
+    }
+    if (filters.tags.length) {
+        parts.push(`Tags: ${filters.tags.join(', ')}`);
+    }
+    if (filters.runningOnly) {
+        parts.push('Only running');
+    }
     return parts.length ? parts.join(' · ') : 'No filters';
 };
 
 export const sortEntries = (entries: ReportTimeSpan[], sort: ReportSort | null, now = moment()) => {
-    if (!sort) { return entries; }
+    if (!sort) {
+        return entries;
+    }
     const getValue = (entry: ReportTimeSpan): string | number => {
         switch (sort.key) {
-            case 'date': return moment(entry.start).startOf('day').valueOf();
-            case 'start': return moment(entry.start).valueOf();
-            case 'end': return entry.end ? moment(entry.end).valueOf() : Number.MAX_SAFE_INTEGER;
-            case 'duration': return durationMs(entry, now);
-            case 'description': return entry.note.toLowerCase();
-            case 'user': return userValue(entry).toLowerCase();
-            case 'project': return projectValue(entry).toLowerCase();
-            case 'tagCount': return (entry.tags || []).length;
-            default: return '';
+            case 'date':
+                return moment(entry.start)
+                    .startOf('day')
+                    .valueOf();
+            case 'start':
+                return moment(entry.start).valueOf();
+            case 'end':
+                return entry.end ? moment(entry.end).valueOf() : Number.MAX_SAFE_INTEGER;
+            case 'duration':
+                return durationMs(entry, now);
+            case 'description':
+                return entry.note.toLowerCase();
+            case 'user':
+                return userValue(entry).toLowerCase();
+            case 'project':
+                return projectValue(entry).toLowerCase();
+            case 'tagCount':
+                return (entry.tags || []).length;
+            default:
+                return '';
         }
     };
     return entries.slice().sort((a, b) => {
@@ -143,14 +211,23 @@ export const summarizeEntries = (entries: ReportTimeSpan[], now = moment()) => {
 export const chartRows = (entries: ReportTimeSpan[], chart: 'day' | 'week' | 'month' | 'project' | 'tag' | 'user') => {
     const rows = entries.reduce<Record<string, number>>((result, entry) => {
         const start = moment(entry.start);
-        const keys = chart === 'tag' ? (entry.tags || []).map((tag) => tag.key) : [
-            chart === 'day' ? start.format('YYYY-MM-DD') :
-            chart === 'week' ? `${start.isoWeekYear()}-W${String(start.isoWeek()).padStart(2, '0')}` :
-            chart === 'month' ? start.format('YYYY-MM') :
-            chart === 'project' ? (projectValue(entry) || 'No project') :
-            userValue(entry) || 'No user',
-        ];
+        const keys =
+            chart === 'tag'
+                ? (entry.tags || []).map((tag) => tag.key)
+                : [
+                      chart === 'day'
+                          ? start.format('YYYY-MM-DD')
+                          : chart === 'week'
+                          ? `${start.isoWeekYear()}-W${String(start.isoWeek()).padStart(2, '0')}`
+                          : chart === 'month'
+                          ? start.format('YYYY-MM')
+                          : chart === 'project'
+                          ? projectValue(entry) || 'No project'
+                          : userValue(entry) || 'No user',
+                  ];
         return keys.reduce((next, key) => ({...next, [key]: (next[key] || 0) + durationMs(entry) / 3600000}), result);
     }, {});
-    return Object.keys(rows).sort().map((name) => ({name, hours: Math.round(rows[name] * 100) / 100}));
+    return Object.keys(rows)
+        .sort()
+        .map((name) => ({name, hours: Math.round(rows[name] * 100) / 100}));
 };
