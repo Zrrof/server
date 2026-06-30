@@ -27,7 +27,7 @@ export const DEFAULT_FILTERS: ReportFilters = {
     groupBy: 'none',
 };
 
-export const tagsToText = (entry: ReportTimeSpan) => (entry.tags || []).map((tag) => `${tag.key}:${tag.value}`).join(', ');
+export const tagsToText = (entry: ReportTimeSpan) => (entry.tags || []).map((tag) => tag.value).join(', ');
 export const tagValue = (entry: ReportTimeSpan, key: string) => {
     const tag = (entry.tags || []).find((entryTag) => entryTag.key.toLowerCase() === key);
     return tag ? tag.value : '';
