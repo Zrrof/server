@@ -28,3 +28,12 @@ jobs:
         run: make release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Image als Datei speichern
+        run: docker save -o server-image.tar ghcr.io/zrrof/server:latest
+      
+      - name: Datei im Browser bereitstellen
+        uses: actions/upload-artifact@v4
+        with:
+          name: mein-docker-image
+          path: server-image.tar
+
