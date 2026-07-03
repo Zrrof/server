@@ -106,7 +106,6 @@ export const Page: React.FC = ({children}) => {
     const [mobileOpen, setMobileOpen] = React.useState(false);
     const [userMenuOpen, setUserMenuOpen] = React.useState<null | HTMLElement>(null);
     const [logout] = useMutation<Logout>(gqlUser.Logout, {refetchQueries: [{query: gqlUser.CurrentUser}]});
-    const version = (versionQuery.data && versionQuery.data.version) || gqlVersion.VersionDefault.version;
     const dashboardsQuery = useQuery<Dashboards>(gqlDashboard.Dashboards);
     const dashboards = (dashboardsQuery.data && dashboardsQuery.data.dashboards) || [];
 
