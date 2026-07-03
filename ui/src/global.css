@@ -36,6 +36,10 @@ html {
     min-width: calc(100% - 48px);
 }
 
+.reports-print-header {
+    display: none;
+}
+
 @media print {
     header,
     nav,
@@ -49,5 +53,13 @@ html {
 
     .reports-page {
         max-width: none !important;
+    }
+
+    .reports-print-header {
+        display: block;
+    }
+
+    .reports-screen-title {
+        display: none;
     }
 }

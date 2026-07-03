@@ -61,14 +61,19 @@ test('builds an xlsx workbook with autofilter and rows', () => {
         customStart: '',
         customEnd: '',
         tags: [],
-        runningOnly: false,
         durationPreset: 'all',
         customDurationMinutes: 0,
         groupBy: 'none',
     });
     expect(workbook.sheet.autoFilter).toBeTruthy();
     expect(workbook.sheet.rows.length).toBeGreaterThan(1);
-    expect(workbook.sheet.columns.map((column: any) => column.header)).toEqual(expect.arrayContaining(['Email', 'Kunde']));
-    expect(workbook.sheet.rows[1][8]).toBe('');
-    expect(workbook.sheet.rows[1][9]).toBe('Beta GmbH');
+    expect(workbook.sheet.columns.map((column: any) => column.header)).toEqual([
+        'Datum',
+        'Start',
+        'Ende',
+        'Dauer',
+        'Tags',
+        'Beschreibung',
+    ]);
+    expect(workbook.sheet.rows[0]).toHaveLength(6);
 });

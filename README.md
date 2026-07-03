@@ -66,16 +66,18 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 
 ## Reports
 
-The UI includes a `/reports` page for tabular time-span reporting. It reuses the existing time-span API and keeps report preferences such as filters, sorting, column order/visibility, charts, collapsed groups, and page size in `localStorage`.
+The UI includes a `/reports` page for reporting completed time spans. It reuses the existing time-span API and stores filters, sorting, column order and visibility, chart selection, collapsed groups, and page size in `localStorage`.
 
 Reports supports:
 
-- client-side search across description, tags, project, user, and date values
-- period, tag, user, project, running-entry, and duration filters
-- grouping by day, week, month, year, project, or user with collapsible group rows
-- summary cards for total hours, entry counts, averages, longest/shortest entry, current filter, and visible entries
-- optional charts for hours per day, week, month, project, tag, or user using the existing Recharts dependency
-- CSV export of the currently filtered data as UTF-8 semicolon-separated values
-- XLSX export of the currently filtered data with `exceljs`, including a frozen header, autofilter, formatted date/duration columns, automatic column widths, and a summary row
-- print/PDF mode that hides navigation and controls while showing the title, print date, active filter, summary, and table
-The UI includes a `/reports` page for tabular time-span reporting. It reuses the existing time-span API, supports client-side search, filtering, sorting, pagination, column visibility, summary totals, CSV export, and a print/PDF-friendly layout. Report preferences such as filters, sorting, columns, and page size are stored in `localStorage`.
+- a table with date, start, end, duration, tags, and description columns
+- client-side search across descriptions, tag keys and values, and dates
+- period, tag, and duration filters
+- sorting by date, start, end, duration, tags, or description
+- grouping by day, ISO week, month, or year with totals and collapsible group rows
+- summary cards for total hours, entry count, average per day, average per entry, longest entry, and shortest entry
+- charts for hours per day, ISO week, month, or tag using Recharts
+- pagination and persisted column visibility/order
+- CSV export of the filtered data as UTF-8 semicolon-separated values
+- XLSX export of the filtered data with `exceljs`, including a frozen header, autofilter, formatted date/duration columns, automatic column widths, and a summary row
+- print/PDF mode that hides navigation and controls while showing the title, print date, active filters, summary, and table

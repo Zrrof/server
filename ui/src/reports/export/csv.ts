@@ -1,11 +1,11 @@
 import moment from 'moment';
 import {ReportTimeSpan} from '../types';
-import {durationMs, formatDuration, projectValue, tagsToText, userValue} from '../utils/reportUtils';
+import {durationMs, formatDuration, tagsToText} from '../utils/reportUtils';
 
 const escapeCsv = (value: string | number) => `"${String(value).replace(/"/g, '""')}"`;
 
 export const reportsCsv = (entries: ReportTimeSpan[]) => {
-    const header = ['Datum', 'Start', 'Ende', 'Dauer', 'Tags', 'Beschreibung', 'Projekt', 'Benutzer', 'Erstellt am'];
+    const header = ['Datum', 'Start', 'Ende', 'Dauer', 'Tags', 'Beschreibung'];
     const rows = entries.map((entry) => [
         moment(entry.start).format('YYYY-MM-DD'),
         moment(entry.start).format('HH:mm'),
@@ -13,9 +13,6 @@ export const reportsCsv = (entries: ReportTimeSpan[]) => {
         formatDuration(durationMs(entry)),
         tagsToText(entry),
         entry.note,
-        projectValue(entry),
-        userValue(entry),
-        '',
     ]);
     return [header, ...rows].map((row) => row.map(escapeCsv).join(';')).join('\n');
 };

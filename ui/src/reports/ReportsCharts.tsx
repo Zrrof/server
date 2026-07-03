@@ -5,7 +5,7 @@ import {Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis
 import {ChartKey, ReportTimeSpan} from './types';
 import {chartRows} from './utils/reportUtils';
 
-const chartOptions: ChartKey[] = ['none', 'day', 'week', 'month', 'project', 'tag', 'user'];
+const chartOptions: ChartKey[] = ['none', 'day', 'week', 'month', 'tag'];
 
 export const ReportsCharts = React.memo<{
     entries: ReportTimeSpan[];

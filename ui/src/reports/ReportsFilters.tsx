@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Button, Checkbox, FormControl, FormControlLabel, Grid, InputLabel, MenuItem, Select, TextField} from '@material-ui/core';
+import {Button, Checkbox, FormControl, Grid, InputLabel, MenuItem, Select, TextField} from '@material-ui/core';
 import {DatePreset, DurationPreset, GroupKey, ReportFilters} from './types';
 import {DEFAULT_FILTERS} from './utils/reportUtils';
 
@@ -102,19 +102,13 @@ export const ReportsFilters: React.FC<{
                 <FormControl fullWidth>
                     <InputLabel>Gruppierung</InputLabel>
                     <Select value={filters.groupBy} onChange={(e) => set({groupBy: e.target.value as GroupKey})}>
-                        {['none', 'day', 'week', 'month', 'year', 'project', 'user'].map((v) => (
+                        {['none', 'day', 'week', 'month', 'year'].map((v) => (
                             <MenuItem key={v} value={v}>
                                 {v}
                             </MenuItem>
                         ))}
                     </Select>
                 </FormControl>
-            </Grid>
-            <Grid item xs={12} md={2}>
-                <FormControlLabel
-                    control={<Checkbox checked={filters.runningOnly} onChange={(e) => set({runningOnly: e.target.checked})} />}
-                    label="Nur laufende"
-                />
             </Grid>
             <Grid item xs={12} md={1}>
                 <Button onClick={() => onChange(DEFAULT_FILTERS)}>Reset</Button>

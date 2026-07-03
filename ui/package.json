@@ -36,7 +36,6 @@
     "react-infinite": "^0.13.0",
     "react-router": "^5.1.2",
     "react-router-dom": "^5.1.2",
-    "react-window": "^1.8.10",
     "recharts": "^1.8.5",
     "typeface-roboto": "^0.0.54",
     "typescript": "^3.7.2"

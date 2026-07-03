@@ -1,5 +1,5 @@
 import moment from 'moment';
-import {ReportFilters, ReportSort, ReportTimeSpan} from '../types';
+import {ChartKey, GroupKey, ReportFilters, ReportGroup, ReportSort, ReportTimeSpan} from '../types';
 
 export const DEFAULT_COLUMNS = [
     {id: 'date', label: 'Datum', visible: true},
@@ -8,9 +8,6 @@ export const DEFAULT_COLUMNS = [
     {id: 'duration', label: 'Dauer', visible: true},
     {id: 'tags', label: 'Tags', visible: true},
     {id: 'description', label: 'Beschreibung', visible: true},
-    {id: 'project', label: 'Projekt', visible: true},
-    {id: 'user', label: 'Benutzer', visible: true},
-    {id: 'created', label: 'Erstellt am', visible: false},
 ];
 
 export const DEFAULT_FILTERS: ReportFilters = {
@@ -19,31 +16,12 @@ export const DEFAULT_FILTERS: ReportFilters = {
     customStart: '',
     customEnd: '',
     tags: [],
-    runningOnly: false,
     durationPreset: 'all',
     customDurationMinutes: 0,
     groupBy: 'none',
 };
 
 export const tagsToText = (entry: ReportTimeSpan) => (entry.tags || []).map((tag) => tag.value).join(', ');
-export const tagValue = (entry: ReportTimeSpan, key: string) => {
-    const normalizedKey = key.toLowerCase();
-    const tag = (entry.tags || []).find((entryTag) => entryTag.key.toLowerCase() === normalizedKey);
-    return tag ? tag.value : '';
-};
-export const labelKeys = (entries: ReportTimeSpan[]) =>
-    entries
-        .reduce<string[]>((keys, entry) => {
-            (entry.tags || []).forEach((tag) => {
-                if (!keys.some((key) => key.toLowerCase() === tag.key.toLowerCase())) {
-                    keys.push(tag.key);
-                }
-            });
-            return keys;
-        }, [])
-        .sort((a, b) => a.localeCompare(b));
-export const projectValue = (entry: ReportTimeSpan) => tagValue(entry, 'project') || tagValue(entry, 'projekt');
-export const userValue = (entry: ReportTimeSpan) => tagValue(entry, 'user') || tagValue(entry, 'benutzer');
 export const durationMs = (entry: ReportTimeSpan, now = moment()) =>
     Math.max(0, (entry.end ? moment(entry.end) : now).diff(moment(entry.start)));
 export const formatDuration = (ms: number) => {
@@ -53,8 +31,7 @@ export const formatDuration = (ms: number) => {
     return hours > 0 ? `${hours} h ${rest.toString().padStart(2, '0')} min` : `${rest} min`;
 };
 
-const dateRange = (filters: ReportFilters) => {
-    const now = moment();
+const dateRange = (filters: ReportFilters, now: moment.Moment) => {
     switch (filters.datePreset) {
         case 'today':
             return {start: now.clone().startOf('day'), end: now.clone().endOf('day')};
@@ -108,7 +85,7 @@ const dateRange = (filters: ReportFilters) => {
 };
 
 export const filterEntries = (entries: ReportTimeSpan[], filters: ReportFilters, now = moment()) => {
-    const range = dateRange(filters);
+    const range = dateRange(filters, now);
     const minDuration =
         filters.durationPreset === 'custom'
             ? filters.customDurationMinutes * 60000
@@ -122,9 +99,6 @@ export const filterEntries = (entries: ReportTimeSpan[], filters: ReportFilters,
         if (range.end && start.isAfter(range.end)) {
             return false;
         }
-        if (filters.runningOnly && entry.end) {
-            return false;
-        }
         if (
             filters.tags.length > 0 &&
             !filters.tags.every((tag) => (entry.tags || []).some((entryTag) => entryTag.key === tag))
@@ -135,7 +109,9 @@ export const filterEntries = (entries: ReportTimeSpan[], filters: ReportFilters,
             return false;
         }
         if (search) {
-            const haystack = [entry.note, tagsToText(entry), projectValue(entry), userValue(entry)].join(' ').toLowerCase();
+            const tagSearchText = (entry.tags || []).map((tag) => `${tag.key} ${tag.value}`).join(' ');
+            const dateSearchText = moment(entry.start).format('YYYY-MM-DD DD.MM.YYYY');
+            const haystack = [entry.note, tagSearchText, dateSearchText].join(' ').toLowerCase();
             if (!haystack.includes(search)) {
                 return false;
             }
@@ -152,8 +128,14 @@ export const activeFilterLabel = (filters: ReportFilters) => {
     if (filters.tags.length) {
         parts.push(`Tags: ${filters.tags.join(', ')}`);
     }
-    if (filters.runningOnly) {
-        parts.push('Only running');
+    if (filters.datePreset !== 'all') {
+        parts.push(`Period: ${filters.datePreset}`);
+    }
+    if (filters.durationPreset !== 'all') {
+        parts.push(`Duration: ${filters.durationPreset}`);
+    }
+    if (filters.groupBy !== 'none') {
+        parts.push(`Grouped by: ${filters.groupBy}`);
     }
     return parts.length ? parts.join(' · ') : 'No filters';
 };
@@ -176,12 +158,8 @@ export const sortEntries = (entries: ReportTimeSpan[], sort: ReportSort | null, 
                 return durationMs(entry, now);
             case 'description':
                 return entry.note.toLowerCase();
-            case 'user':
-                return userValue(entry).toLowerCase();
-            case 'project':
-                return projectValue(entry).toLowerCase();
-            case 'tagCount':
-                return (entry.tags || []).length;
+            case 'tags':
+                return tagsToText(entry).toLowerCase();
             default:
                 return '';
         }
@@ -208,7 +186,41 @@ export const summarizeEntries = (entries: ReportTimeSpan[], now = moment()) => {
     };
 };
 
-export const chartRows = (entries: ReportTimeSpan[], chart: 'day' | 'week' | 'month' | 'project' | 'tag' | 'user') => {
+const groupKey = (entry: ReportTimeSpan, groupBy: Exclude<GroupKey, 'none'>) => {
+    const start = moment(entry.start);
+    switch (groupBy) {
+        case 'day':
+            return start.format('YYYY-MM-DD');
+        case 'week':
+            return `${start.isoWeekYear()}-W${String(start.isoWeek()).padStart(2, '0')}`;
+        case 'month':
+            return start.format('YYYY-MM');
+        case 'year':
+            return start.format('YYYY');
+        default:
+            return '';
+    }
+};
+
+export const groupEntries = (entries: ReportTimeSpan[], groupBy: GroupKey): ReportGroup[] => {
+    if (groupBy === 'none') {
+        return [];
+    }
+    const groups = entries.reduce<Record<string, ReportTimeSpan[]>>((result, entry) => {
+        const key = groupKey(entry, groupBy);
+        return {...result, [key]: [...(result[key] || []), entry]};
+    }, {});
+    return Object.keys(groups)
+        .sort()
+        .map((key) => ({
+            key,
+            label: key,
+            entries: groups[key],
+            totalMs: summarizeEntries(groups[key]).totalMs,
+        }));
+};
+
+export const chartRows = (entries: ReportTimeSpan[], chart: Exclude<ChartKey, 'none'>) => {
     const rows = entries.reduce<Record<string, number>>((result, entry) => {
         const start = moment(entry.start);
         const keys =
@@ -221,11 +233,11 @@ export const chartRows = (entries: ReportTimeSpan[], chart: 'day' | 'week' | 'mo
                           ? `${start.isoWeekYear()}-W${String(start.isoWeek()).padStart(2, '0')}`
                           : chart === 'month'
                           ? start.format('YYYY-MM')
-                          : chart === 'project'
-                          ? projectValue(entry) || 'No project'
-                          : userValue(entry) || 'No user',
+                          : '',
                   ];
-        return keys.reduce((next, key) => ({...next, [key]: (next[key] || 0) + durationMs(entry) / 3600000}), result);
+        return keys
+            .filter((key) => key.length > 0)
+            .reduce((next, key) => ({...next, [key]: (next[key] || 0) + durationMs(entry) / 3600000}), result);
     }, {});
     return Object.keys(rows)
         .sort()

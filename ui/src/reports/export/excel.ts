@@ -1,16 +1,7 @@
 import ExcelJS from 'exceljs';
 import moment from 'moment';
 import {ReportFilters, ReportTimeSpan} from '../types';
-import {
-    durationMs,
-    formatDuration,
-    labelKeys,
-    projectValue,
-    summarizeEntries,
-    tagsToText,
-    tagValue,
-    userValue,
-} from '../utils/reportUtils';
+import {durationMs, formatDuration, summarizeEntries, tagsToText} from '../utils/reportUtils';
 
 export const buildReportsWorkbook = (entries: ReportTimeSpan[], filters: ReportFilters) => {
     const workbook = new ExcelJS.Workbook();
@@ -18,7 +9,6 @@ export const buildReportsWorkbook = (entries: ReportTimeSpan[], filters: ReportF
     workbook.created = new Date();
     const sheet = workbook.addWorksheet('Reports', {views: [{state: 'frozen', ySplit: 4}]});
     const summary = summarizeEntries(entries);
-    const labels = labelKeys(entries);
     sheet.columns = [
         {header: 'Datum', key: 'date', width: 14},
         {header: 'Start', key: 'start', width: 10},
@@ -26,9 +16,6 @@ export const buildReportsWorkbook = (entries: ReportTimeSpan[], filters: ReportF
         {header: 'Dauer', key: 'duration', width: 14},
         {header: 'Tags', key: 'tags', width: 30},
         {header: 'Beschreibung', key: 'description', width: 40},
-        {header: 'Projekt', key: 'project', width: 20},
-        {header: 'Benutzer', key: 'user', width: 20},
-        ...labels.map((label, index) => ({header: label, key: `label${index}`, width: 20})),
     ];
     sheet.spliceRows(
         1,
@@ -47,9 +34,6 @@ export const buildReportsWorkbook = (entries: ReportTimeSpan[], filters: ReportF
             formatDuration(durationMs(entry)),
             tagsToText(entry),
             entry.note,
-            projectValue(entry),
-            userValue(entry),
-            ...labels.map((label) => tagValue(entry, label)),
         ])
     );
     sheet.addRow(['Summary', '', '', formatDuration(summary.totalMs), '', `${summary.count} entries`]);

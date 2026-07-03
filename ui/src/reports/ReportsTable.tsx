@@ -10,22 +10,11 @@ import {
     Table,
     TableBody,
     TableCell,
-    TableFooter,
     TableHead,
     TableRow,
-    Typography,
 } from '@material-ui/core';
-import {ReportColumn, ReportSort, ReportTimeSpan, SortKey} from './types';
-import {
-    durationMs,
-    formatDuration,
-    labelKeys,
-    projectValue,
-    summarizeEntries,
-    tagsToText,
-    tagValue,
-    userValue,
-} from './utils/reportUtils';
+import {GroupKey, ReportColumn, ReportSort, ReportTimeSpan, SortKey} from './types';
+import {durationMs, formatDuration, groupEntries, tagsToText} from './utils/reportUtils';
 
 const sortable: Record<string, SortKey> = {
     date: 'date',
@@ -33,9 +22,7 @@ const sortable: Record<string, SortKey> = {
     end: 'end',
     duration: 'duration',
     description: 'description',
-    user: 'user',
-    project: 'project',
-    tags: 'tagCount',
+    tags: 'tags',
 };
 
 export const ReportsTable: React.FC<{
@@ -43,16 +30,18 @@ export const ReportsTable: React.FC<{
     columns: ReportColumn[];
     pageSize: number | 'all';
     sort: ReportSort | null;
+    groupBy: GroupKey;
+    collapsedGroups: string[];
     onSort: (sort: ReportSort | null) => void;
     onPageSize: (pageSize: number | 'all') => void;
     onColumns: (columns: ReportColumn[]) => void;
-}> = ({entries, columns, pageSize, sort, onSort, onPageSize, onColumns}) => {
+    onCollapsedGroups: (collapsedGroups: string[]) => void;
+}> = ({entries, columns, pageSize, sort, groupBy, collapsedGroups, onSort, onPageSize, onColumns, onCollapsedGroups}) => {
     const [page, setPage] = React.useState(0);
-    React.useEffect(() => setPage(0), [entries, pageSize]);
-    const labelColumns = labelKeys(entries).map((key) => ({id: `label:${key}`, label: key, visible: true}));
-    const visibleColumns = [...columns.filter((column) => column.visible), ...labelColumns];
-    const paged = pageSize === 'all' ? entries : entries.slice(page * pageSize, page * pageSize + pageSize);
-    const summary = summarizeEntries(entries);
+    React.useEffect(() => setPage(0), [entries, pageSize, groupBy]);
+    const visibleColumns = columns.filter((column) => column.visible);
+    const paged = groupBy !== 'none' || pageSize === 'all' ? entries : entries.slice(page * pageSize, page * pageSize + pageSize);
+    const groups = groupEntries(paged, groupBy);
     const cycleSort = (id: string) => {
         const key = sortable[id];
         if (!key) {
@@ -80,32 +69,62 @@ export const ReportsTable: React.FC<{
                 return tagsToText(entry);
             case 'description':
                 return entry.note;
-            case 'project':
-                return projectValue(entry);
-            case 'user':
-                return userValue(entry);
-            case 'created':
-                return '';
             default:
-                return id.indexOf('label:') === 0 ? tagValue(entry, id.slice(6)) : '';
+                return '';
         }
     };
+    const entryRow = (entry: ReportTimeSpan) => (
+        <TableRow key={entry.id}>
+            {visibleColumns.map((column) => (
+                <TableCell key={column.id}>{render(entry, column.id)}</TableCell>
+            ))}
+        </TableRow>
+    );
+    const groupedRows = groups.map((group) => {
+        const collapsed = collapsedGroups.indexOf(group.key) >= 0;
+        return (
+            <React.Fragment key={group.key}>
+                <TableRow>
+                    <TableCell colSpan={Math.max(1, visibleColumns.length)}>
+                        <button
+                            type="button"
+                            aria-expanded={!collapsed}
+                            onClick={() =>
+                                onCollapsedGroups(
+                                    collapsed
+                                        ? collapsedGroups.filter((key) => key !== group.key)
+                                        : [...collapsedGroups, group.key]
+                                )
+                            }>
+                            {collapsed ? '▶' : '▼'} {group.label}
+                        </button>{' '}
+                        — {group.entries.length} Einträge, {formatDuration(group.totalMs)}
+                    </TableCell>
+                </TableRow>
+                {collapsed ? null : group.entries.map(entryRow)}
+            </React.Fragment>
+        );
+    });
     return (
         <Paper style={{marginTop: 16, overflowX: 'auto'}}>
             <div style={{display: 'flex', gap: 16, padding: 12, flexWrap: 'wrap'}} className="reports-no-print">
-                <FormControl>
-                    <InputLabel>Seitengröße</InputLabel>
-                    <Select
-                        value={String(pageSize)}
-                        onChange={(e) => onPageSize(e.target.value === 'all' ? 'all' : parseInt(e.target.value as string, 10))}>
-                        {[25, 50, 100, 250].map((size) => (
-                            <MenuItem key={size} value={String(size)}>
-                                {size}
-                            </MenuItem>
-                        ))}
-                        <MenuItem value="all">Alle</MenuItem>
-                    </Select>
-                </FormControl>
+                {groupBy === 'none' ? (
+                    <FormControl>
+                        <InputLabel>Seitengröße</InputLabel>
+                        <Select
+                            value={String(pageSize)}
+                            onChange={(e) =>
+                                onPageSize(e.target.value === 'all' ? 'all' : parseInt(e.target.value as string, 10))
+                            }>
+                            {[25, 50, 100, 250].map((size) => (
+                                <MenuItem key={size} value={String(size)}>
+                                    {size}
+                                </MenuItem>
+                            ))}
+                            <MenuItem value="all">Alle</MenuItem>
+                        </Select>
+                    </FormControl>
+                ) : null}
                 {columns.map((column) => (
                     <label key={column.id} style={{display: 'flex', alignItems: 'center'}}>
                         <Checkbox
@@ -132,29 +151,9 @@ export const ReportsTable: React.FC<{
                         ))}
                     </TableRow>
                 </TableHead>
-                <TableBody>
-                    {paged.map((entry) => (
-                        <TableRow key={entry.id}>
-                            {visibleColumns.map((column) => (
-                                <TableCell key={column.id}>{render(entry, column.id)}</TableCell>
-                            ))}
-                        </TableRow>
-                    ))}
-                </TableBody>
-                <TableFooter>
-                    <TableRow>
-                        <TableCell colSpan={visibleColumns.length}>
-                            <Typography variant="subtitle2">
-                                Gesamtstunden: {formatDuration(summary.totalMs)} · Gesamteinträge: {summary.count} · Durchschnitt
-                                pro Tag: {formatDuration(summary.averagePerDayMs)} · Durchschnitt pro Eintrag:{' '}
-                                {formatDuration(summary.averagePerEntryMs)} · Längster Eintrag:{' '}
-                                {formatDuration(summary.longestMs)} · Kürzester Eintrag: {formatDuration(summary.shortestMs)}
-                            </Typography>
-                        </TableCell>
-                    </TableRow>
-                </TableFooter>
+                <TableBody>{groupBy === 'none' ? paged.map(entryRow) : groupedRows}</TableBody>
             </Table>
-            {pageSize !== 'all' ? (
+            {groupBy === 'none' && pageSize !== 'all' ? (
                 <div className="reports-no-print" style={{padding: 12}}>
                     <button disabled={page === 0} onClick={() => setPage(page - 1)}>
                         Zurück

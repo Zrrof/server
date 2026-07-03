@@ -8,13 +8,15 @@ export const ReportsSummary: React.FC<{entries: ReportTimeSpan[]}> = ({entries})
     const cards = [
         ['Gesamtstunden', formatDuration(summary.totalMs)],
         ['Einträge', String(summary.count)],
-        ['Durchschnitt', formatDuration(summary.averagePerEntryMs)],
+        ['Durchschnitt pro Tag', formatDuration(summary.averagePerDayMs)],
+        ['Durchschnitt pro Eintrag', formatDuration(summary.averagePerEntryMs)],
         ['Längster Eintrag', formatDuration(summary.longestMs)],
+        ['Kürzester Eintrag', formatDuration(summary.shortestMs)],
     ];
     return (
         <Grid container spacing={2}>
             {cards.map(([label, value]) => (
-                <Grid item xs={12} sm={6} md={3} key={label}>
+                <Grid item xs={12} sm={6} md={4} key={label}>
                     <Paper style={{padding: 16}}>
                         <Typography color="textSecondary" variant="subtitle2">
                             {label}

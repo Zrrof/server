@@ -13,7 +13,7 @@ export interface ReportTimeSpan {
 }
 
 export type SortDirection = 'asc' | 'desc';
-export type SortKey = 'date' | 'start' | 'end' | 'duration' | 'description' | 'user' | 'project' | 'tagCount';
+export type SortKey = 'date' | 'start' | 'end' | 'duration' | 'description' | 'tags';
 
 export interface ReportSort {
     key: SortKey;
@@ -32,8 +32,8 @@ export type DatePreset =
     | 'custom';
 
 export type DurationPreset = 'all' | '30m' | '1h' | '2h' | '4h' | 'custom';
-export type GroupKey = 'none' | 'day' | 'week' | 'month' | 'year' | 'project' | 'user';
-export type ChartKey = 'none' | 'day' | 'week' | 'month' | 'project' | 'tag' | 'user';
+export type GroupKey = 'none' | 'day' | 'week' | 'month' | 'year';
+export type ChartKey = 'none' | 'day' | 'week' | 'month' | 'tag';
 
 export interface ReportFilters {
     search: string;
@@ -41,7 +41,6 @@ export interface ReportFilters {
     customStart: string;
     customEnd: string;
     tags: string[];
-    runningOnly: boolean;
     durationPreset: DurationPreset;
     customDurationMinutes: number;
     groupBy: GroupKey;
@@ -58,4 +57,13 @@ export interface ReportSettings {
     columns: ReportColumn[];
     pageSize: number | 'all';
     filters: ReportFilters;
+    chart: ChartKey;
+    collapsedGroups: string[];
+}
+
+export interface ReportGroup {
+    key: string;
+    label: string;
+    entries: ReportTimeSpan[];
+    totalMs: number;
 }

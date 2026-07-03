@@ -3,11 +3,23 @@ import {useQuery} from '@apollo/react-hooks';
 import {Button, Paper, Typography} from '@material-ui/core';
 import * as gqlTimeSpan from '../gql/timeSpan';
 import {CenteredSpinner} from '../common/CenteredSpinner';
-import {ReportFilters, ReportSettings, ReportTimeSpan} from './types';
+import {
+    ChartKey,
+    DatePreset,
+    DurationPreset,
+    GroupKey,
+    ReportColumn,
+    ReportFilters,
+    ReportSettings,
+    ReportTimeSpan,
+    SortKey,
+} from './types';
 import {DEFAULT_COLUMNS, DEFAULT_FILTERS, filterEntries, sortEntries} from './utils/reportUtils';
 import {ReportsFilters} from './ReportsFilters';
 import {ReportsSummary} from './ReportsSummary';
 import {ReportsTable} from './ReportsTable';
+import {ReportsCharts} from './ReportsCharts';
+import {ReportsPrintHeader} from './ReportsPrintHeader';
 import {downloadCsv} from './export/csv';
 import {downloadExcel} from './export/excel';
 
@@ -17,7 +29,24 @@ const DEFAULT_SETTINGS: ReportSettings = {
     columns: DEFAULT_COLUMNS,
     pageSize: 25,
     filters: DEFAULT_FILTERS,
+    chart: 'none',
+    collapsedGroups: [],
 };
+const SORT_KEYS: SortKey[] = ['date', 'start', 'end', 'duration', 'description', 'tags'];
+const DATE_PRESETS: DatePreset[] = [
+    'all',
+    'today',
+    'yesterday',
+    'thisWeek',
+    'lastWeek',
+    'thisMonth',
+    'lastMonth',
+    'thisYear',
+    'custom',
+];
+const DURATION_PRESETS: DurationPreset[] = ['all', '30m', '1h', '2h', '4h', 'custom'];
+const GROUP_KEYS: GroupKey[] = ['none', 'day', 'week', 'month', 'year'];
+const CHART_KEYS: ChartKey[] = ['none', 'day', 'week', 'month', 'tag'];
 
 interface ReportsCursor {
     pageSize: number;
@@ -36,17 +65,59 @@ interface ReportsTimeSpansVariables {
     cursor: Partial<ReportsCursor>;
 }
 
-const withoutLegacyFilters = (filters: Partial<ReportFilters>) => {
-    const normalized = {...DEFAULT_FILTERS, ...filters} as ReportFilters & {user?: string; project?: string};
-    delete normalized.user;
-    delete normalized.project;
-    return normalized;
+const normalizeFilters = (saved: Partial<ReportFilters>): ReportFilters => ({
+    search: typeof saved.search === 'string' ? saved.search : DEFAULT_FILTERS.search,
+    datePreset: saved.datePreset && DATE_PRESETS.indexOf(saved.datePreset) >= 0 ? saved.datePreset : DEFAULT_FILTERS.datePreset,
+    customStart: typeof saved.customStart === 'string' ? saved.customStart : DEFAULT_FILTERS.customStart,
+    customEnd: typeof saved.customEnd === 'string' ? saved.customEnd : DEFAULT_FILTERS.customEnd,
+    tags: Array.isArray(saved.tags) ? saved.tags.filter((tag) => typeof tag === 'string') : DEFAULT_FILTERS.tags,
+    durationPreset:
+        saved.durationPreset && DURATION_PRESETS.indexOf(saved.durationPreset) >= 0
+            ? saved.durationPreset
+            : DEFAULT_FILTERS.durationPreset,
+    customDurationMinutes:
+        typeof saved.customDurationMinutes === 'number'
+            ? Math.max(0, saved.customDurationMinutes)
+            : DEFAULT_FILTERS.customDurationMinutes,
+    groupBy: saved.groupBy && GROUP_KEYS.indexOf(saved.groupBy) >= 0 ? saved.groupBy : DEFAULT_FILTERS.groupBy,
+});
+
+const normalizeColumns = (saved: ReportColumn[] | undefined) => {
+    const allowedIds = DEFAULT_COLUMNS.map((column) => column.id);
+    const savedColumns = Array.isArray(saved)
+        ? saved.filter(
+              (column, index, columns) =>
+                  column &&
+                  allowedIds.indexOf(column.id) >= 0 &&
+                  columns.findIndex((candidate) => candidate.id === column.id) === index
+          )
+        : [];
+    return [
+        ...savedColumns.map((column) => ({...column, visible: column.visible !== false})),
+        ...DEFAULT_COLUMNS.filter((column) => !savedColumns.some((savedColumn) => savedColumn.id === column.id)),
+    ];
+};
+
+const normalizePageSize = (saved: number | 'all' | undefined): number | 'all' => {
+    if (saved === 'all') {
+        return saved;
+    }
+    return typeof saved === 'number' && [25, 50, 100, 250].indexOf(saved) >= 0 ? saved : DEFAULT_SETTINGS.pageSize;
 };
 
 const readSettings = (): ReportSettings => {
     try {
         const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') as Partial<ReportSettings>;
-        return {...DEFAULT_SETTINGS, ...saved, filters: withoutLegacyFilters(saved.filters || {})};
+        return {
+            sort: saved.sort && SORT_KEYS.indexOf(saved.sort.key) >= 0 ? saved.sort : DEFAULT_SETTINGS.sort,
+            columns: normalizeColumns(saved.columns),
+            pageSize: normalizePageSize(saved.pageSize),
+            filters: normalizeFilters(saved.filters || {}),
+            chart: saved.chart && CHART_KEYS.indexOf(saved.chart) >= 0 ? saved.chart : DEFAULT_SETTINGS.chart,
+            collapsedGroups: Array.isArray(saved.collapsedGroups)
+                ? saved.collapsedGroups.filter((key) => typeof key === 'string')
+                : DEFAULT_SETTINGS.collapsedGroups,
+        };
     } catch (e) {
         return DEFAULT_SETTINGS;
     }
@@ -97,7 +168,8 @@ export const ReportsPage = () => {
     const filtered = sortEntries(filterEntries(entries, settings.filters), settings.sort);
     return (
         <div style={{maxWidth: 1600, margin: '0 auto'}} className="reports-page">
-            <Typography variant="h4" component="h1" gutterBottom>
+            <ReportsPrintHeader filters={settings.filters} />
+            <Typography variant="h4" component="h1" gutterBottom className="reports-screen-title">
                 Reports
             </Typography>
             <ReportsSummary entries={filtered} />
@@ -119,14 +191,18 @@ export const ReportsPage = () => {
                     </Button>
                 </div>
             </Paper>
+            <ReportsCharts entries={filtered} chart={settings.chart} onChart={(chart) => setSettings({...settings, chart})} />
             <ReportsTable
                 entries={filtered}
                 columns={settings.columns}
                 pageSize={settings.pageSize}
                 sort={settings.sort}
+                groupBy={settings.filters.groupBy}
+                collapsedGroups={settings.collapsedGroups}
                 onSort={(sort) => setSettings({...settings, sort})}
                 onPageSize={(pageSize) => setSettings({...settings, pageSize})}
                 onColumns={(columns) => setSettings({...settings, columns})}
+                onCollapsedGroups={(collapsedGroups) => setSettings({...settings, collapsedGroups})}
             />
         </div>
     );
