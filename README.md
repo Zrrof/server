@@ -81,3 +81,25 @@ Reports supports:
 - CSV export of the filtered data as UTF-8 semicolon-separated values
 - XLSX export of the filtered data with `exceljs`, including a frozen header, autofilter, formatted date/duration columns, automatic column widths, and a summary row
 - print/PDF mode that hides navigation and controls while showing the title, print date, active filters, summary, and table
+
+## Raspberry Pi 5 with Portainer
+
+The Portainer stack builds a native `linux/arm64` image directly on a Raspberry Pi 5 and stores the SQLite database in a named Docker volume.
+
+Requirements:
+
+- Raspberry Pi OS 64-bit or another 64-bit ARM Linux distribution
+- Docker Engine with the Compose plugin
+- Portainer connected to the Docker Standalone environment
+
+Deploy the stack from Portainer:
+
+1. Push the branch containing these files to GitHub.
+2. In Portainer, select **Stacks**, **Add stack**, then **Git repository**.
+3. Set the repository URL to `https://github.com/Zrrof/server.git`.
+4. Select the branch containing the Reports module.
+5. Set the Compose path to `docker-compose.portainer.yml`.
+6. Add the environment variable `TRAGGO_DEFAULT_USER_PASS` with a strong password.
+7. Select **Deploy the stack**.
+
+The first build can take several minutes on a Raspberry Pi. After deployment, open `http://<raspberry-pi-ip>:3030`. The application data remains in the `traggo-reporting-data` volume when the container is recreated.
