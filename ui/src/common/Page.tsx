@@ -30,7 +30,6 @@ import {Link} from 'react-router-dom';
 import MenuItem from '@material-ui/core/MenuItem';
 import {useMutation, useQuery} from '@apollo/react-hooks';
 import {Logout} from '../gql/__generated__/Logout';
-import {Version} from '../gql/__generated__/Version';
 import {CurrentUser} from '../gql/__generated__/CurrentUser';
 import * as gqlDashboard from '../gql/dashboard';
 import {Dashboards} from '../gql/__generated__/Dashboards';
