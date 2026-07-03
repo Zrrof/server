@@ -4,9 +4,7 @@ import Grid from '@material-ui/core/Grid';
 import {LoginForm} from './LoginForm';
 import Link from '@material-ui/core/Link';
 import {DefaultPaper} from '../common/DefaultPaper';
-import * as gqlVersion from '../gql/version';
 import {useQuery} from '@apollo/react-hooks';
-import {Version} from '../gql/__generated__/Version';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 
 const useStyles = makeStyles(() => ({
@@ -17,9 +15,6 @@ const useStyles = makeStyles(() => ({
 
 export const LoginPage = () => {
     const classes = useStyles();
-    const {data: {version = gqlVersion.VersionDefault.version} = gqlVersion.VersionDefault} = useQuery<Version>(
-        gqlVersion.Version
-    );
     return (
         <Grid container={true} direction="row" alignItems="center" justify="center" style={{height: '95%'}}>
             <Grid item>
