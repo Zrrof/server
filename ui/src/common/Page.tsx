@@ -24,7 +24,6 @@ import Typography from '@material-ui/core/Typography';
 import {ListSubheader, Menu} from '@material-ui/core';
 import HrefLink from '@material-ui/core/Link';
 import * as gqlUser from '../gql/user';
-import * as gqlVersion from '../gql/version';
 import Button from '@material-ui/core/Button';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import {Link} from 'react-router-dom';
