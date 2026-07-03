@@ -25,7 +25,7 @@ export const LoginPage = () => {
             <Grid item>
                 <DefaultPaper>
                     <Typography variant="h1" component="h1" gutterBottom={true}>
-                        traggo
+                        TrackIt
                     </Typography>
                     <LoginForm />
                 </DefaultPaper>
@@ -44,7 +44,7 @@ export const LoginPage = () => {
                     |
                 </Typography>
                 <Typography variant="subtitle1" component="span" className={classes.footerLink}>
-                    {version.name}@{version.commit.slice(0, 8)}
+                    TrackIt@1.0
                 </Typography>
             </div>
         </Grid>
