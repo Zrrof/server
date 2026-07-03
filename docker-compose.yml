@@ -1,15 +1,26 @@
-version: "3.9"
+version: "3.8"
+
 services:
   traggo:
+    image: traggo-reporting:rpi5-arm64
+    platform: linux/arm64
     build:
       context: .
-      dockerfile: docker/Dockerfile.dev
+      dockerfile: docker/Dockerfile.portainer
+    restart: unless-stopped
     environment:
-      TRAGGO_DEFAULT_USER_NAME: "admin"
-      TRAGGO_DEFAULT_USER_PASS: "admin"
-
-      TRAGGO_LOG_LEVEL: debug
+      TRAGGO_PORT: "3030"
+      TRAGGO_DEFAULT_USER_NAME: "${TRAGGO_DEFAULT_USER_NAME:-admin}"
+      TRAGGO_DEFAULT_USER_PASS: "${TRAGGO_DEFAULT_USER_PASS:?Set TRAGGO_DEFAULT_USER_PASS in Portainer}"
+      TRAGGO_PASS_STRENGTH: "${TRAGGO_PASS_STRENGTH:-10}"
+      TRAGGO_LOG_LEVEL: "${TRAGGO_LOG_LEVEL:-info}"
+      TRAGGO_DATABASE_DIALECT: "sqlite3"
+      TRAGGO_DATABASE_CONNECTION: "data/traggo.db"
     ports:
-      - 3030:3030
+      - "${TRAGGO_HTTP_PORT:-3030}:3030"
     volumes:
-      - .traggodata:/opt/traggo/data
+      - traggo-data:/opt/traggo/data
+
+volumes:
+  traggo-data:
+    name: "${TRAGGO_DATA_VOLUME:-traggo-reporting-data}"
