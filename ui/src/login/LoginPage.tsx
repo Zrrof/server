@@ -4,7 +4,6 @@ import Grid from '@material-ui/core/Grid';
 import {LoginForm} from './LoginForm';
 import Link from '@material-ui/core/Link';
 import {DefaultPaper} from '../common/DefaultPaper';
-import {useQuery} from '@apollo/react-hooks';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 
 const useStyles = makeStyles(() => ({
