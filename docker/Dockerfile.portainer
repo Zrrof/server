@@ -6,9 +6,12 @@ WORKDIR /app
 COPY schema.graphql ./
 COPY ui/package.json ui/yarn.lock ./ui/
 RUN corepack enable \
-    && corepack prepare yarn@1.22.22 --activate \
-    && cd ui \
-    && yarn install --frozen-lockfile
+ && corepack prepare yarn@1.22.22 --activate \
+ && cd ui \
+ && yarn config set registry https://registry.npmjs.org \
+ && yarn config set network-timeout 600000 \
+ && sed -i 's#https://registry.yarnpkg.com#https://registry.npmjs.org#g' yarn.lock \
+ && yarn install --frozen-lockfile
 
 COPY ui ./ui
 RUN cd ui \
