@@ -102,7 +102,7 @@ export const DoneTrackers: React.FC<DoneTrackersProps> = ({addTagsToTracker}) =>
                 infiniteLoadBeginEdgeOffset={2000}
                 loadingSpinnerDelegate={
                     <Typography align={'center'} variant={'h5'}>
-                        .. loading time spans ..
+                        .. lade Zeiteinträge ..
                     </Typography>
                 }
                 elementHeight={values.map((m) => heights[m.key] || 500)}>
