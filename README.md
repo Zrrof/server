@@ -104,4 +104,4 @@ Deploy the stack from Portainer:
 
 The first build can take several minutes on a Raspberry Pi. After deployment, open `http://<raspberry-pi-ip>:3030`. The application data remains in the `traggo-reporting-data` volume when the container is recreated.
 
-If the Portainer build log contains `make download-tools install generate build-bin-local`, Portainer is using the development Dockerfile from an older repository revision. Pull the latest branch revision and redeploy the stack with either `docker-compose.portainer.yml` or the updated `docker-compose.yml`. Local development with the old development image is still available through `docker-compose.dev.yml`.
+If the Portainer build log contains `make download-tools install generate build-bin-local`, Portainer is using the development Dockerfile from an older repository revision. Pull the latest branch revision and redeploy the stack with either `docker-compose.portainer.yml` or the updated `docker-compose.yml`. Local development with the old development image is still available through `docker-compose.dev.yml`. Tets
