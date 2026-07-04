@@ -149,28 +149,28 @@ export const Page: React.FC = ({children}) => {
                 </ListItem>
             </List>
             <Divider />
-            <List subheader={<ListSubheader>Timesheet</ListSubheader>} dense={true}>
+            <List subheader={<ListSubheader>Zeiteinträge</ListSubheader>} dense={true}>
                 <ListItem button component={routerLink('/timesheet/list')}>
                     <ListItemIcon>
                         <TimeLineIcon />
                     </ListItemIcon>
-                    <ListItemText primary="List" />
+                    <ListItemText primary="Liste" />
                 </ListItem>
                 <ListItem button component={routerLink('/timesheet/calendar')}>
                     <ListItemIcon>
                         <CalendarIcon />
                     </ListItemIcon>
-                    <ListItemText primary="Calendar" />
+                    <ListItemText primary="Kalender" />
                 </ListItem>
                 <ListItem button component={routerLink('/reports')}>
                     <ListItemIcon>
                         <ReportsIcon />
                     </ListItemIcon>
-                    <ListItemText primary="Reports" />
+                    <ListItemText primary="Berichte" />
                 </ListItem>
             </List>
             <Divider />
-            <List subheader={<ListSubheader>User</ListSubheader>} dense={true}>
+            <List subheader={<ListSubheader>Nutzer</ListSubheader>} dense={true}>
                 <ListItem button component={routerLink('/user/tags')}>
                     <ListItemIcon>
                         <LabelIcon />
@@ -181,13 +181,13 @@ export const Page: React.FC = ({children}) => {
                     <ListItemIcon>
                         <DevicesIcon />
                     </ListItemIcon>
-                    <ListItemText primary="Devices" />
+                    <ListItemText primary="Geräte" />
                 </ListItem>
                 <ListItem button component={routerLink('/user/settings')}>
                     <ListItemIcon>
                         <SettingsIcon />
                     </ListItemIcon>
-                    <ListItemText primary="Settings" />
+                    <ListItemText primary="Einstellungen" />
                 </ListItem>
             </List>
             {admin ? (
@@ -198,7 +198,7 @@ export const Page: React.FC = ({children}) => {
                             <ListItemIcon>
                                 <UsersIcon />
                             </ListItemIcon>
-                            <ListItemText primary="Users" />
+                            <ListItemText primary="Nutzer" />
                         </ListItem>
                     </List>
                 </>
