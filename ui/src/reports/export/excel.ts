@@ -22,7 +22,7 @@ export const buildReportsWorkbook = (entries: ReportTimeSpan[], filters: ReportF
         0,
         ['Traggo Reports'],
         ['Filter', JSON.stringify(filters)],
-        ['Exported at', moment().format('YYYY-MM-DD HH:mm')],
+        ['Exported at', moment().format('DD.MM.YYYY HH:mm')],
         []
     );
     const headerRowNumber = 5;
