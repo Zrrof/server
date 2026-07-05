@@ -22,7 +22,7 @@ export const downloadCsv = (entries: ReportTimeSpan[]) => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `traggo-reports-${moment().format('YYYY-MM-DD')}.csv`;
+    link.download = `traggo-reports-${moment().format('DD.MM.YYYY')}.csv`;
     link.click();
     URL.revokeObjectURL(url);
 };
