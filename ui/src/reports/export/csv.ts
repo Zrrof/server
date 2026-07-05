@@ -7,7 +7,7 @@ const escapeCsv = (value: string | number) => `"${String(value).replace(/"/g, '"
 export const reportsCsv = (entries: ReportTimeSpan[]) => {
     const header = ['Datum', 'Start', 'Ende', 'Dauer', 'Tags', 'Beschreibung'];
     const rows = entries.map((entry) => [
-        moment(entry.start).format('YYYY-MM-DD'),
+        moment(entry.start).format('DD-MM-YYYY'),
         moment(entry.start).format('HH:mm'),
         entry.end ? moment(entry.end).format('HH:mm') : 'läuft',
         formatDuration(durationMs(entry)),
