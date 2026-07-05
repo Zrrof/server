@@ -58,7 +58,7 @@ export const ReportsTable: React.FC<{
     const render = (entry: ReportTimeSpan, id: string) => {
         switch (id) {
             case 'date':
-                return moment(entry.start).format('YYYY-MM-DD');
+                return moment(entry.start).format('DD-MM-YYYY');
             case 'start':
                 return moment(entry.start).format('HH:mm');
             case 'end':
