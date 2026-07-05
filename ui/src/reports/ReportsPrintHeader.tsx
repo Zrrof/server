@@ -9,7 +9,7 @@ export const ReportsPrintHeader: React.FC<{filters: ReportFilters}> = ({filters}
         <Typography variant="h4" component="h1">
             Reports
         </Typography>
-        <Typography variant="subtitle1">Printed at {moment().format('YYYY-MM-DD HH:mm')}</Typography>
+        <Typography variant="subtitle1">Printed at {moment().format('DD.MM.YYYY HH:mm')}</Typography>
         <Typography variant="subtitle2">{activeFilterLabel(filters)}</Typography>
     </div>
 );
