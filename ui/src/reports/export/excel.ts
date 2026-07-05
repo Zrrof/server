@@ -43,7 +43,7 @@ export const buildReportsWorkbook = (entries: ReportTimeSpan[], filters: ReportF
         from: {row: headerRowNumber, column: 1},
         to: {row: headerRowNumber, column: sheet.columns.length},
     };
-    sheet.getColumn(1).numFmt = 'yyyy-mm-dd';
+    sheet.getColumn(1).numFmt = 'dd-mm-yyyy';
     sheet.eachRow((row) =>
         row.eachCell((cell) => {
             cell.alignment = {vertical: 'top', wrapText: true};
