@@ -68,7 +68,7 @@ export const downloadExcel = async (entries: ReportTimeSpan[], filters: ReportFi
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `traggo-reports-${moment().format('YYYY-MM-DD')}.xlsx`;
+    link.download = `traggo-reports-${moment().format('DD.MM.YYYY')}.xlsx`;
     link.click();
     URL.revokeObjectURL(url);
 };
