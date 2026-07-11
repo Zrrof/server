@@ -97,19 +97,6 @@ const getMonthFromEntries = (entries: ReportTimeSpan[]): moment.Moment | null =>
     return moment(entries[0].start).startOf('month');
 };
 
-const setCellValue = (
-    sheet: ExcelJS.Worksheet,
-    row: number,
-    col: number,
-    value: string | number | Date | null,
-): void => {
-    const cell = sheet.getCell(row, col);
-    if (cell.value && typeof cell.value === 'object' && 'formula' in cell.value) {
-        return;
-    }
-    cell.value = value;
-};
-
 const fillTemplate = (
     sheet: ExcelJS.Worksheet,
     groupedDays: GroupedDay[],
@@ -119,12 +106,12 @@ const fillTemplate = (
     const monthStr = month.format('MMMM');
     const yearStr = month.format('YYYY');
 
-    setCellValue(sheet, ROW_INFO_NAME, 2, settings.name);
-    setCellValue(sheet, ROW_INFO_NAME, 5, settings.department);
-    setCellValue(sheet, ROW_INFO_MONTH, 2, monthStr);
-    setCellValue(sheet, ROW_INFO_MONTH, 5, yearStr);
-    setCellValue(sheet, ROW_INFO_HOURS, 2, settings.monthlyHours);
-    setCellValue(sheet, ROW_TARGET, 4, settings.monthlyHours);
+    sheet.getCell(ROW_INFO_NAME, 2).value = settings.name;
+    sheet.getCell(ROW_INFO_NAME, 5).value = settings.department;
+    sheet.getCell(ROW_INFO_MONTH, 2).value = monthStr;
+    sheet.getCell(ROW_INFO_MONTH, 5).value = yearStr;
+    sheet.getCell(ROW_INFO_HOURS, 2).value = settings.monthlyHours;
+    sheet.getCell(ROW_TARGET, 4).value = settings.monthlyHours;
 
     for (const groupedDay of groupedDays) {
         const dayOfMonth = groupedDay.date.date();
@@ -140,12 +127,12 @@ const fillTemplate = (
         const combinedTags = getCombinedTags(groupedDay.entries);
         const symbol = getSymbolForTags(combinedTags, settings.symbolMappings);
 
-        setCellValue(sheet, row, COL_DATE, groupedDay.date.toDate());
-        setCellValue(sheet, row, COL_START, merged.start.toDate());
-        setCellValue(sheet, row, COL_END, merged.end ? merged.end.toDate() : null);
-        setCellValue(sheet, row, COL_BREAK, 0);
-        setCellValue(sheet, row, COL_SYMBOL, symbol);
-        setCellValue(sheet, row, COL_NOTE, combinedNote);
+        sheet.getCell(row, COL_DATE).value = groupedDay.date.toDate();
+        sheet.getCell(row, COL_START).value = merged.start.toDate();
+        sheet.getCell(row, COL_END).value = merged.end ? merged.end.toDate() : null;
+        sheet.getCell(row, COL_BREAK).value = 0;
+        sheet.getCell(row, COL_SYMBOL).value = symbol;
+        sheet.getCell(row, COL_NOTE).value = combinedNote;
     }
 };
 
