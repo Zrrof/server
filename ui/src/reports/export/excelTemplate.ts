@@ -160,7 +160,7 @@ export const createTemplateWorkbook = (): ExcelJS.Workbook => {
 
     ws.getCell(ROW_DIFF, 1).value = 'Differenz:';
     ws.getCell(ROW_DIFF, 1).font = boldFont;
-    ws.getCell(ROW_DIFF, 5).value = {formula: `E${ROW_SUM}-E${ROW_TARGET}`};
+    ws.getCell(ROW_DIFF, 5).value = {formula: `E${ROW_SUM}-D${ROW_TARGET}`};
     ws.getCell(ROW_DIFF, 5).font = {bold: true, size: 11, name: 'Calibri', color: {argb: 'FF0000'}};
     ws.getCell(ROW_DIFF, 5).alignment = {horizontal: 'center', vertical: 'middle'};
     ws.getCell(ROW_DIFF, 5).numFmt = '0.00';

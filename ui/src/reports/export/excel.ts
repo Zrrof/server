@@ -112,7 +112,7 @@ const setCellValue = (
     value: string | number | Date | null,
 ): void => {
     const cell = sheet.getCell(row, col);
-    if (cell.value && typeof cell.value === 'object' && 'formula' in cell.value) {
+    if (cell.value !== null && cell.value !== undefined && typeof cell.value === 'object' && 'formula' in cell.value) {
         return;
     }
     cell.value = value;
