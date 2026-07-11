@@ -46,13 +46,14 @@ const setDataCell = (
 ): ExcelJS.Cell => {
     const cell = sheet.getCell(row, col);
     cell.font = normalFont;
+    const align = options && options.align;
     cell.alignment = {
-        horizontal: options?.align === 'left' ? 'left' : 'center',
+        horizontal: align === 'left' ? 'left' : 'center',
         vertical: 'middle',
-        wrapText: options?.align === 'left',
+        wrapText: align === 'left',
     };
     setBorder(cell);
-    if (options?.numFmt) {
+    if (options && options.numFmt) {
         cell.numFmt = options.numFmt;
     }
     return cell;
