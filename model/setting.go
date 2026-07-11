@@ -17,6 +17,7 @@ const (
 	ThemeGruvboxLight  = "GruvboxLight"
 	ThemeMaterialDark  = "MaterialDark"
 	ThemeMaterialLight = "MaterialLight"
+	ThemeZrofflight    = "Zrofflight"
 
 	DateLocaleGerman      = "German"
 	DateLocaleAmerican    = "American"
