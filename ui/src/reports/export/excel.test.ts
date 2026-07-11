@@ -1,79 +1,48 @@
-// tslint:disable:no-any
-jest.mock(
-    'exceljs',
-    () => {
-        class Worksheet {
-            public rows: any[] = [];
-            public columns: any[] = [];
-            public autoFilter: any;
-            public addRow(row: any) {
-                this.rows.push(row);
-                return row;
-            }
-            public spliceRows() {
-                return undefined;
-            }
-            public getRow() {
-                return {font: {}, alignment: {}};
-            }
-            public getColumn() {
-                return {numFmt: ''};
-            }
-            public eachRow() {
-                return undefined;
-            }
-        }
-        class Workbook {
-            public creator = '';
-            public created = new Date();
-            public sheet = new Worksheet();
-            public xlsx = {writeBuffer: () => Promise.resolve(new ArrayBuffer(1))};
-            public addWorksheet() {
-                return this.sheet;
-            }
-        }
-        return {__esModule: true, default: {Workbook}, Workbook};
-    },
-    {virtual: true}
-);
+import {getSymbolForTags, TAG_PRIORITY} from './symbolMapping';
+import {SymbolMapping} from './excelSettings';
 
-import {buildReportsWorkbook} from './excel';
-import {ReportTimeSpan} from '../types';
-
-const entries: ReportTimeSpan[] = [
-    {
-        id: 1,
-        start: '2026-06-29T08:00:00Z',
-        end: '2026-06-29T09:00:00Z',
-        note: 'Alpha',
-        tags: [
-            {key: 'Email', value: 'a@example.com'},
-            {key: 'Kunde', value: 'Acme'},
-        ],
-    },
-    {id: 2, start: '2026-06-29T10:00:00Z', end: '2026-06-29T11:00:00Z', note: 'Beta', tags: [{key: 'Kunde', value: 'Beta GmbH'}]},
+const defaultMappings: SymbolMapping[] = [
+    {tag: 'Urlaub', symbol: 'U'},
+    {tag: 'Krank', symbol: 'K'},
+    {tag: 'Feiertag', symbol: 'F'},
+    {tag: 'Homeoffice', symbol: 'HO'},
+    {tag: 'Dienstreise', symbol: 'DR'},
+    {tag: 'Zeitausgleich', symbol: 'ZA'},
+    {tag: 'Berufsschule', symbol: 'BS'},
 ];
 
-test('builds an xlsx workbook with autofilter and rows', () => {
-    const workbook: any = buildReportsWorkbook(entries, {
-        search: '',
-        datePreset: 'all',
-        customStart: '',
-        customEnd: '',
-        tags: [],
-        durationPreset: 'all',
-        customDurationMinutes: 0,
-        groupBy: 'none',
-    });
-    expect(workbook.sheet.autoFilter).toBeTruthy();
-    expect(workbook.sheet.rows.length).toBeGreaterThan(1);
-    expect(workbook.sheet.columns.map((column: any) => column.header)).toEqual([
-        'Datum',
-        'Start',
-        'Ende',
-        'Dauer',
-        'Tags',
-        'Beschreibung',
-    ]);
-    expect(workbook.sheet.rows[0]).toHaveLength(6);
+test('has correct priority order', () => {
+    expect(TAG_PRIORITY).toEqual(['Krank', 'Urlaub', 'Feiertag', 'Zeitausgleich', 'Dienstreise', 'Homeoffice']);
+});
+
+test('returns symbol for matching tag', () => {
+    const tags = [{key: 'Urlaub', value: 'true'}];
+    expect(getSymbolForTags(tags, defaultMappings)).toBe('U');
+});
+
+test('returns empty for no tags', () => {
+    expect(getSymbolForTags([], defaultMappings)).toBe('');
+    expect(getSymbolForTags(null, defaultMappings)).toBe('');
+});
+
+test('respects priority: Krank before Urlaub', () => {
+    const tags = [
+        {key: 'Urlaub', value: 'true'},
+        {key: 'Krank', value: 'true'},
+    ];
+    expect(getSymbolForTags(tags, defaultMappings)).toBe('K');
+});
+
+test('returns empty for unmapped tag', () => {
+    const tags = [{key: 'Unbekannt', value: 'x'}];
+    expect(getSymbolForTags(tags, defaultMappings)).toBe('');
+});
+
+test('returns custom tag symbol for non-priority tags', () => {
+    const mappings: SymbolMapping[] = [
+        ...defaultMappings,
+        {tag: 'Projekt A', symbol: 'PA'},
+    ];
+    const tags = [{key: 'Projekt A', value: 'test'}];
+    expect(getSymbolForTags(tags, mappings)).toBe('PA');
 });

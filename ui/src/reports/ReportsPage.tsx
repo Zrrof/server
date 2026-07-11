@@ -21,7 +21,7 @@ import {ReportsTable} from './ReportsTable';
 import {ReportsCharts} from './ReportsCharts';
 import {ReportsPrintHeader} from './ReportsPrintHeader';
 import {downloadCsv} from './export/csv';
-import {downloadExcel} from './export/excel';
+import {ExcelExportDialog} from './export/ExcelExportDialog';
 
 const STORAGE_KEY = 'traggo.reports.settings';
 const DEFAULT_SETTINGS: ReportSettings = {
@@ -125,6 +125,7 @@ const readSettings = (): ReportSettings => {
 
 export const ReportsPage = () => {
     const [settings, setSettings] = React.useState<ReportSettings>(readSettings);
+    const [excelDialogOpen, setExcelDialogOpen] = React.useState(false);
     const {data, loading, error, fetchMore} = useQuery<ReportsTimeSpansData, ReportsTimeSpansVariables>(gqlTimeSpan.TimeSpans, {
         variables: {cursor: {pageSize: 500}},
     });
@@ -183,9 +184,15 @@ export const ReportsPage = () => {
                     <Button variant="contained" color="primary" onClick={() => downloadCsv(filtered)}>
                         CSV exportieren
                     </Button>{' '}
-                    <Button variant="outlined" onClick={() => downloadExcel(filtered, settings.filters)}>
+                    <Button variant="outlined" onClick={() => setExcelDialogOpen(true)}>
                         Excel exportieren
                     </Button>{' '}
+                    {excelDialogOpen && (
+                        <ExcelExportDialog
+                            entries={filtered}
+                            onClose={() => setExcelDialogOpen(false)}
+                        />
+                    )}
                     <Button variant="outlined" onClick={() => window.print()}>
                         Drucken / Als PDF speichern
                     </Button>

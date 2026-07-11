@@ -48,5 +48,5 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ghcr.io/${{ steps.repo.outputs.repo }}:latest_new
-            ghcr.io/${{ steps.repo.outputs.repo }}:${{ github.sha }}_new
+            ghcr.io/${{ steps.repo.outputs.repo }}:latest_new_opencode
+            ghcr.io/${{ steps.repo.outputs.repo }}:${{ github.sha }}_new_opencode
