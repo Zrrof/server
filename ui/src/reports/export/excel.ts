@@ -31,7 +31,7 @@ interface GroupedDay {
     entries: DayEntry[];
 }
 
-const groupEntriesByDay = (entries: ReportTimeSpan[]): GroupedDay[] => {
+export const groupEntriesByDay = (entries: ReportTimeSpan[]): GroupedDay[] => {
     const grouped = new Map<string, DayEntry[]>();
     for (const entry of entries) {
         const dayKey = moment(entry.start).format('YYYY-MM-DD');
@@ -46,13 +46,13 @@ const groupEntriesByDay = (entries: ReportTimeSpan[]): GroupedDay[] => {
     }
     return Array.from(grouped.entries())
         .map(([key, dayEntries]) => ({
-            date: moment(key),
+            date: moment.utc(key, 'YYYY-MM-DD'),
             entries: dayEntries,
         }))
         .sort((a, b) => a.date.valueOf() - b.date.valueOf());
 };
 
-const mergeDayEntries = (dayEntries: DayEntry[]): {start: moment.Moment; end: moment.Moment | null} => {
+export const mergeDayEntries = (dayEntries: DayEntry[]): {start: moment.Moment; end: moment.Moment | null} => {
     let earliest = dayEntries[0].start;
     let latest: moment.Moment | null = dayEntries[0].end;
     for (const entry of dayEntries) {
@@ -66,14 +66,14 @@ const mergeDayEntries = (dayEntries: DayEntry[]): {start: moment.Moment; end: mo
     return {start: earliest, end: latest};
 };
 
-const combineNotes = (dayEntries: DayEntry[]): string => {
+export const combineNotes = (dayEntries: DayEntry[]): string => {
     const notes = dayEntries
         .map((e) => e.note)
         .filter((n) => n.trim().length > 0);
     return notes.join('; ');
 };
 
-const getCombinedTags = (dayEntries: DayEntry[]): Array<{key: string; value: string}> | null => {
+export const getCombinedTags = (dayEntries: DayEntry[]): Array<{key: string; value: string}> | null => {
     const seen = new Set<string>();
     const result: Array<{key: string; value: string}> = [];
     for (const entry of dayEntries) {
@@ -90,14 +90,14 @@ const getCombinedTags = (dayEntries: DayEntry[]): Array<{key: string; value: str
     return result.length > 0 ? result : null;
 };
 
-const getMonthFromEntries = (entries: ReportTimeSpan[]): moment.Moment | null => {
+export const getMonthFromEntries = (entries: ReportTimeSpan[]): moment.Moment | null => {
     if (entries.length === 0) {
         return null;
     }
     return moment(entries[0].start).startOf('month');
 };
 
-const fillTemplate = (
+export const fillTemplate = (
     sheet: ExcelJS.Worksheet,
     groupedDays: GroupedDay[],
     month: moment.Moment,
@@ -113,26 +113,25 @@ const fillTemplate = (
     sheet.getCell(ROW_INFO_HOURS, 2).value = settings.monthlyHours;
     sheet.getCell(ROW_TARGET, 4).value = settings.monthlyHours;
 
+    let row = ROW_DATA_START;
     for (const groupedDay of groupedDays) {
-        const dayOfMonth = groupedDay.date.date();
-        if (dayOfMonth < 1) {
-            continue;
-        }
-        const row = ROW_DATA_START + dayOfMonth - 1;
         if (row > ROW_DATA_END) {
-            continue;
+            break;
         }
+        const dayOfMonth = groupedDay.date.date();
         const merged = mergeDayEntries(groupedDay.entries);
         const combinedNote = combineNotes(groupedDay.entries);
         const combinedTags = getCombinedTags(groupedDay.entries);
         const symbol = getSymbolForTags(combinedTags, settings.symbolMappings);
 
+        sheet.getCell(row, 1).value = dayOfMonth;
         sheet.getCell(row, COL_DATE).value = groupedDay.date.toDate();
         sheet.getCell(row, COL_START).value = merged.start.toDate();
         sheet.getCell(row, COL_END).value = merged.end ? merged.end.toDate() : null;
         sheet.getCell(row, COL_BREAK).value = 0;
         sheet.getCell(row, COL_SYMBOL).value = symbol;
         sheet.getCell(row, COL_NOTE).value = combinedNote;
+        row++;
     }
 };
 

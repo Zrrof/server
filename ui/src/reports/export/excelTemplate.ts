@@ -111,8 +111,6 @@ export const createTemplateWorkbook = (): ExcelJS.Workbook => {
     headers.forEach((text, i) => setHeaderCell(ws, ROW_HEADER, i + 1, text));
 
     for (let r = ROW_DATA_START; r <= ROW_DATA_END; r++) {
-        const dayNum = r - ROW_DATA_START + 1;
-        ws.getCell(r, 1).value = dayNum;
         ws.getCell(r, 1).font = normalFont;
         ws.getCell(r, 1).alignment = {horizontal: 'center', vertical: 'middle'};
         setBorder(ws.getCell(r, 1));
