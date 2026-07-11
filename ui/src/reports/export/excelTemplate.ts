@@ -151,6 +151,7 @@ export const createTemplateWorkbook = (): ExcelJS.Workbook => {
 
     ws.getCell(ROW_TARGET, 1).value = 'Sollarbeitszeit:';
     ws.getCell(ROW_TARGET, 1).font = boldFont;
+    ws.getCell(ROW_TARGET, 4).value = 0;
     ws.getCell(ROW_TARGET, 4).font = normalFont;
     ws.getCell(ROW_TARGET, 4).border = {bottom: {style: 'thin'}};
     ws.getCell(ROW_TARGET, 4).alignment = {horizontal: 'center', vertical: 'middle'};

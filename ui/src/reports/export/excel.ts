@@ -21,7 +21,7 @@ const COL_NOTE = 8;
 
 interface DayEntry {
     start: moment.Moment;
-    end: moment.Moment;
+    end: moment.Moment | null;
     note: string;
     tags: Array<{key: string; value: string}> | null;
 }
@@ -31,22 +31,14 @@ interface GroupedDay {
     entries: DayEntry[];
 }
 
-const isWeekend = (date: moment.Moment): boolean => {
-    const day = date.isoWeekday();
-    return day === 6 || day === 7;
-};
-
 const groupEntriesByDay = (entries: ReportTimeSpan[]): GroupedDay[] => {
     const grouped = new Map<string, DayEntry[]>();
     for (const entry of entries) {
-        if (!entry.end) {
-            continue;
-        }
         const dayKey = moment(entry.start).format('YYYY-MM-DD');
         const existing = grouped.get(dayKey) || [];
         existing.push({
             start: moment(entry.start),
-            end: moment(entry.end),
+            end: entry.end ? moment(entry.end) : null,
             note: entry.note,
             tags: entry.tags,
         });
@@ -60,14 +52,14 @@ const groupEntriesByDay = (entries: ReportTimeSpan[]): GroupedDay[] => {
         .sort((a, b) => a.date.valueOf() - b.date.valueOf());
 };
 
-const mergeDayEntries = (dayEntries: DayEntry[]): {start: moment.Moment; end: moment.Moment} => {
+const mergeDayEntries = (dayEntries: DayEntry[]): {start: moment.Moment; end: moment.Moment | null} => {
     let earliest = dayEntries[0].start;
-    let latest = dayEntries[0].end;
+    let latest: moment.Moment | null = dayEntries[0].end;
     for (const entry of dayEntries) {
         if (entry.start.isBefore(earliest)) {
             earliest = entry.start;
         }
-        if (entry.end.isAfter(latest)) {
+        if (entry.end && (!latest || entry.end.isAfter(latest))) {
             latest = entry.end;
         }
     }
@@ -112,7 +104,7 @@ const setCellValue = (
     value: string | number | Date | null,
 ): void => {
     const cell = sheet.getCell(row, col);
-    if (cell.value !== null && cell.value !== undefined && typeof cell.value === 'object' && 'formula' in cell.value) {
+    if (cell.value && typeof cell.value === 'object' && 'formula' in cell.value) {
         return;
     }
     cell.value = value;
@@ -134,21 +126,15 @@ const fillTemplate = (
     setCellValue(sheet, ROW_INFO_HOURS, 2, settings.monthlyHours);
     setCellValue(sheet, ROW_TARGET, 4, settings.monthlyHours);
 
-    const daysInMonth = month.daysInMonth();
-
     for (const groupedDay of groupedDays) {
         const dayOfMonth = groupedDay.date.date();
-        if (dayOfMonth < 1 || dayOfMonth > daysInMonth) {
-            continue;
-        }
-        if (isWeekend(groupedDay.date)) {
+        if (dayOfMonth < 1) {
             continue;
         }
         const row = ROW_DATA_START + dayOfMonth - 1;
         if (row > ROW_DATA_END) {
             continue;
         }
-
         const merged = mergeDayEntries(groupedDay.entries);
         const combinedNote = combineNotes(groupedDay.entries);
         const combinedTags = getCombinedTags(groupedDay.entries);
@@ -156,7 +142,7 @@ const fillTemplate = (
 
         setCellValue(sheet, row, COL_DATE, groupedDay.date.toDate());
         setCellValue(sheet, row, COL_START, merged.start.toDate());
-        setCellValue(sheet, row, COL_END, merged.end.toDate());
+        setCellValue(sheet, row, COL_END, merged.end ? merged.end.toDate() : null);
         setCellValue(sheet, row, COL_BREAK, 0);
         setCellValue(sheet, row, COL_SYMBOL, symbol);
         setCellValue(sheet, row, COL_NOTE, combinedNote);
