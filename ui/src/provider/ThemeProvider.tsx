@@ -110,6 +110,60 @@ const themes: Record<SettingTheme, Theme> = {
             type: 'light',
         },
     }),
+    [SettingTheme.Zrofflight]: createMuiTheme({
+        overrides: {
+            MuiLink: {
+                root: {
+                    color: '#3B82F6',
+                },
+            },
+            MuiIconButton: {
+                root: {
+                    color: 'inherit',
+                },
+            },
+            MuiListItemIcon: {
+                root: {
+                    color: 'inherit',
+                },
+            },
+            MuiToolbar: {
+                root: {
+                    background: '#3B82F6',
+                },
+            },
+        },
+        palette: {
+            background: {
+                default: '#F9FAFB',
+                paper: '#FFFFFF',
+            },
+            text: {
+                primary: '#111827',
+                secondary: '#4B5563',
+            },
+            primary: {
+                main: '#3B82F6',
+                light: '#60A5FA',
+                dark: '#2563EB',
+            },
+            secondary: {
+                main: '#10B981',
+                light: '#34D399',
+                dark: '#059669',
+            },
+            error: {
+                main: '#EF4444',
+            },
+            type: 'light',
+        },
+        typography: {
+            fontFamily: 'Inter, "Helvetica Neue", Arial, sans-serif',
+        },
+        shape: {
+            borderRadius: 8,
+        },
+    }),
     [SettingTheme.MaterialDark]: createMuiTheme({
         overrides: {
             MuiLink: {
