@@ -3,6 +3,7 @@ import moment from 'moment';
 import {ReportTimeSpan} from '../types';
 import {ExportSettings} from './excelSettings';
 import {getSymbolForTags} from './symbolMapping';
+import {createTemplateWorkbook} from './excelTemplate';
 
 const ROW_INFO_NAME = 2;
 const ROW_INFO_MONTH = 3;
@@ -29,8 +30,6 @@ interface GroupedDay {
     date: moment.Moment;
     entries: DayEntry[];
 }
-
-const TEMPLATE_URL = '/Arbeitszeitnachweis_Juniorstudium.xlsx';
 
 const isWeekend = (date: moment.Moment): boolean => {
     const day = date.isoWeekday();
@@ -173,11 +172,7 @@ export const generateFromTemplate = async (
         return;
     }
 
-    const response = await fetch(TEMPLATE_URL);
-    const arrayBuffer = await response.arrayBuffer();
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(arrayBuffer);
-
+    const workbook = createTemplateWorkbook();
     const sheet = workbook.getWorksheet(1);
     if (!sheet) {
         return;
