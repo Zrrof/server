@@ -3,14 +3,15 @@ import moment from 'moment';
 import {ReportTimeSpan} from '../types';
 import {ExportSettings} from './excelSettings';
 import {getSymbolForTags} from './symbolMapping';
-import {createTemplateWorkbook} from './excelTemplate';
+import {createTemplateWorkbook, setDataCell, normalFont, setBorder} from './excelTemplate';
 
 const ROW_INFO_NAME = 2;
 const ROW_INFO_MONTH = 3;
 const ROW_INFO_HOURS = 4;
 const ROW_DATA_START = 7;
-const ROW_DATA_END = 37;
 const ROW_TARGET = 40;
+const ROW_SUM = 39;
+const ROW_DIFF = 41;
 
 const COL_DATE = 2;
 const COL_START = 3;
@@ -113,9 +114,11 @@ export const fillTemplate = (
     sheet.getCell(ROW_INFO_HOURS, 2).value = settings.monthlyHours;
     sheet.getCell(ROW_TARGET, 4).value = settings.monthlyHours;
 
+    const ROW_LIMIT = 100;
+
     let row = ROW_DATA_START;
     for (const groupedDay of groupedDays) {
-        if (row > ROW_DATA_END) {
+        if (row >= ROW_LIMIT) {
             break;
         }
         const dayOfMonth = groupedDay.date.date();
@@ -124,15 +127,39 @@ export const fillTemplate = (
         const combinedTags = getCombinedTags(groupedDay.entries);
         const symbol = getSymbolForTags(combinedTags, settings.symbolMappings);
 
+        sheet.getRow(row).height = 20;
+
         sheet.getCell(row, 1).value = dayOfMonth;
-        sheet.getCell(row, COL_DATE).value = groupedDay.date.toDate();
-        sheet.getCell(row, COL_START).value = merged.start.toDate();
-        sheet.getCell(row, COL_END).value = merged.end ? merged.end.toDate() : null;
-        sheet.getCell(row, COL_BREAK).value = 0;
+        sheet.getCell(row, 1).font = normalFont;
+        sheet.getCell(row, 1).alignment = {horizontal: 'center', vertical: 'middle'};
+        setBorder(sheet.getCell(row, 1));
+
+        setDataCell(sheet, row, COL_DATE, {numFmt: 'DD.MM.YYYY'}).value = groupedDay.date.toDate();
+        setDataCell(sheet, row, COL_START, {numFmt: 'HH:MM'}).value = merged.start.toDate();
+        setDataCell(sheet, row, COL_END, {numFmt: 'HH:MM'}).value = merged.end ? merged.end.toDate() : null;
+        setDataCell(sheet, row, COL_BREAK, {numFmt: 'HH:MM'}).value = 0;
+
+        const durCell = sheet.getCell(row, 6);
+        durCell.value = {formula: `MAX(0,(D${row}-C${row}-E${row})*24)`};
+        durCell.font = normalFont;
+        durCell.alignment = {horizontal: 'center', vertical: 'middle'};
+        durCell.numFmt = '0.00';
+        setBorder(durCell);
+
+        setDataCell(sheet, row, COL_SYMBOL);
         sheet.getCell(row, COL_SYMBOL).value = symbol;
+
+        setDataCell(sheet, row, COL_NOTE, {align: 'left'});
         sheet.getCell(row, COL_NOTE).value = combinedNote;
+
         row++;
     }
+
+    const lastDataRow = row - 1;
+    if (lastDataRow >= ROW_DATA_START) {
+        sheet.getCell(ROW_SUM, 5).value = {formula: `SUM(F${ROW_DATA_START}:F${lastDataRow})`};
+    }
+    sheet.getCell(ROW_DIFF, 5).value = {formula: `E${ROW_SUM}-D${ROW_TARGET}`};
 };
 
 export const generateFromTemplate = async (

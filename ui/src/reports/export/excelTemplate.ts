@@ -2,13 +2,11 @@ import ExcelJS from 'exceljs';
 
 const ROW_TITLE = 1;
 const ROW_HEADER = 6;
-const ROW_DATA_START = 7;
-const ROW_DATA_END = 37;
 const ROW_SUM = 39;
 const ROW_TARGET = 40;
 const ROW_DIFF = 41;
 
-const border: Partial<ExcelJS.Borders> = {
+export const border: Partial<ExcelJS.Borders> = {
     top: {style: 'thin'},
     left: {style: 'thin'},
     bottom: {style: 'thin'},
@@ -22,10 +20,10 @@ const headerFill: ExcelJS.Fill = {
 };
 
 const boldFont: Partial<ExcelJS.Font> = {bold: true, size: 11, name: 'Calibri'};
-const normalFont: Partial<ExcelJS.Font> = {size: 11, name: 'Calibri'};
+export const normalFont: Partial<ExcelJS.Font> = {size: 11, name: 'Calibri'};
 const titleFont: Partial<ExcelJS.Font> = {bold: true, size: 16, name: 'Calibri'};
 
-const setBorder = (cell: ExcelJS.Cell): void => {
+export const setBorder = (cell: ExcelJS.Cell): void => {
     cell.border = border;
 };
 
@@ -38,7 +36,7 @@ const setHeaderCell = (sheet: ExcelJS.Worksheet, row: number, col: number, text:
     setBorder(cell);
 };
 
-const setDataCell = (
+export const setDataCell = (
     sheet: ExcelJS.Worksheet,
     row: number,
     col: number,
@@ -110,36 +108,11 @@ export const createTemplateWorkbook = (): ExcelJS.Workbook => {
     const headers = ['Tag', 'Datum', 'Beginn', 'Ende', 'Pause', 'Dauer (h)', 'Kürzel', 'Bemerkung'];
     headers.forEach((text, i) => setHeaderCell(ws, ROW_HEADER, i + 1, text));
 
-    for (let r = ROW_DATA_START; r <= ROW_DATA_END; r++) {
-        ws.getCell(r, 1).font = normalFont;
-        ws.getCell(r, 1).alignment = {horizontal: 'center', vertical: 'middle'};
-        setBorder(ws.getCell(r, 1));
-
-        setDataCell(ws, r, 2, {numFmt: 'DD.MM.YYYY'});
-        setDataCell(ws, r, 3, {numFmt: 'HH:MM'});
-        setDataCell(ws, r, 4, {numFmt: 'HH:MM'});
-        setDataCell(ws, r, 5, {numFmt: 'HH:MM'});
-
-        const durCell = ws.getCell(r, 6);
-        durCell.value = {formula: `MAX(0,(D${r}-C${r}-E${r})*24)`};
-        durCell.font = normalFont;
-        durCell.alignment = {horizontal: 'center', vertical: 'middle'};
-        durCell.numFmt = '0.00';
-        setBorder(durCell);
-
-        setDataCell(ws, r, 7);
-        setDataCell(ws, r, 8, {align: 'left'});
-    }
-
-    for (let r = ROW_DATA_START; r <= ROW_DATA_END; r++) {
-        ws.getRow(r).height = 20;
-    }
-
     ws.getRow(38).height = 8;
 
     ws.getCell(ROW_SUM, 1).value = 'Gesamtstunden:';
     ws.getCell(ROW_SUM, 1).font = boldFont;
-    ws.getCell(ROW_SUM, 5).value = {formula: `SUM(F${ROW_DATA_START}:F${ROW_DATA_END})`};
+    ws.getCell(ROW_SUM, 5).value = 0;
     ws.getCell(ROW_SUM, 5).font = boldFont;
     ws.getCell(ROW_SUM, 5).alignment = {horizontal: 'center', vertical: 'middle'};
     ws.getCell(ROW_SUM, 5).numFmt = '0.00';

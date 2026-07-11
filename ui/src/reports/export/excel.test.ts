@@ -146,7 +146,7 @@ describe('getMonthFromEntries', () => {
     });
 });
 
-describe('fillTemplate + round-trip (sequential rows)', () => {
+describe('fillTemplate + round-trip (dynamic rows)', () => {
     const settings: ExportSettings = {...DEFAULT_SETTINGS, name: 'Test User', monthlyHours: 20};
 
     async function roundTrip(groupedDays: any, month: moment.Moment) {
@@ -162,7 +162,6 @@ describe('fillTemplate + round-trip (sequential rows)', () => {
     test('writes info cells correctly', async () => {
         const ws = await roundTrip(groupEntriesByDay([makeEntry(1, 8, 16)]), moment('2026-07-01'));
         expect(ws.getCell(2, 2).value).toBe('Test User');
-        expect(ws.getCell(2, 5).value).toBe('');
         expect(ws.getCell(3, 2).value).toBeTruthy();
         expect(ws.getCell(3, 5).value).toBe('2026');
         expect(ws.getCell(4, 2).value).toBe(20);
@@ -184,18 +183,17 @@ describe('fillTemplate + round-trip (sequential rows)', () => {
     });
 
     test('writes correct day number in column A', async () => {
-        const ws = await roundTrip(
-            groupEntriesByDay([makeEntry(15, 8, 16, 'Mitte')]),
-            moment('2026-07-01'),
-        );
+        const ws = await roundTrip(groupEntriesByDay([makeEntry(15, 8, 16, 'Mitte')]), moment('2026-07-01'));
         expect(ws.getCell(7, 1).value).toBe(15);
     });
 
-    test('stops at row 37 when more than 31 grouped days', async () => {
-        const days = Array.from({length: 35}, (_, i) => makeEntry(i + 1, 8, 16, `Day ${i + 1}`));
-        const ws = await roundTrip(groupEntriesByDay(days), moment('2026-07-01'));
-        expect(ws.getCell(37, 8).value).toBe('Day 31');
-        expect(ws.getCell(38, 8).value).toBeNull();
+    test('only creates as many rows as grouped days', async () => {
+        const entries = [makeEntry(3, 8, 16, 'A'), makeEntry(5, 9, 17, 'B'), makeEntry(7, 10, 18, 'C')];
+        const ws = await roundTrip(groupEntriesByDay(entries), moment('2026-07-01'));
+        expect(ws.getCell(7, 8).value).toBe('A');
+        expect(ws.getCell(8, 8).value).toBe('B');
+        expect(ws.getCell(9, 8).value).toBe('C');
+        expect(ws.getCell(10, 8).value).toBeNull();
     });
 
     test('writes all columns for an entry', async () => {
@@ -216,16 +214,27 @@ describe('fillTemplate + round-trip (sequential rows)', () => {
         expect(ws.getCell(7, 8).value).toBe('Vormittag; Nachmittag');
     });
 
-    test('no ghost rows - only rows with data have values', async () => {
-        const ws = await roundTrip(groupEntriesByDay([makeEntry(5, 8, 16, 'Nur einer')]), moment('2026-07-01'));
-        expect(ws.getCell(7, 8).value).toBe('Nur einer');
-        expect(ws.getCell(8, 8).value).toBeNull();
-    });
-
     test('preserves formula in column 6', async () => {
         const ws = await roundTrip(groupEntriesByDay([makeEntry(1, 8, 16)]), moment('2026-07-01'));
         const f: any = ws.getCell(7, 6).value;
         expect(f).toBeTruthy();
         expect(f.formula).toContain('MAX');
+    });
+
+    test('SUM formula covers only written rows', async () => {
+        const ws = await roundTrip(
+            groupEntriesByDay([makeEntry(1, 8, 16, 'A'), makeEntry(2, 9, 17, 'B'), makeEntry(3, 10, 18, 'C')]),
+            moment('2026-07-01'),
+        );
+        const sumFormula: any = ws.getCell(39, 5).value;
+        expect(sumFormula).toBeTruthy();
+        expect(sumFormula.formula).toBe('SUM(F7:F9)');
+    });
+
+    test('DIFF formula references SUM and TARGET', async () => {
+        const ws = await roundTrip(groupEntriesByDay([makeEntry(1, 8, 16)]), moment('2026-07-01'));
+        const diffFormula: any = ws.getCell(41, 5).value;
+        expect(diffFormula).toBeTruthy();
+        expect(diffFormula.formula).toContain('E39-D40');
     });
 });
