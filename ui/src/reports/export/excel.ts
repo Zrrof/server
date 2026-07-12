@@ -4,16 +4,11 @@ import {ReportTimeSpan} from '../types';
 import {ExportSettings} from './excelSettings';
 import {getSymbolForTags} from './symbolMapping';
 
-const toLocalTz = (m: moment.Moment): moment.Moment => m.clone().tz(moment.tz.guess());
+const GERMAN_MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 
-const getExcelDateString = (m: moment.Moment): string => toLocalTz(m).format('DD.MM.YYYY');
+const getExcelDateString = (m: moment.Moment): string => m.format('DD.MM.YYYY');
 
-const getExcelTimeValue = (m: moment.Moment): number => {
-    const local = toLocalTz(m);
-    return local.hour() / 24 + local.minute() / 1440;
-};
-
-const getDayOfMonth = (m: moment.Moment): number => toLocalTz(m).date();
+const getExcelTimeValue = (m: moment.Moment): number => m.hour() / 24 + m.minute() / 1440;
 
 interface DayEntry {
     start: moment.Moment;
@@ -131,7 +126,7 @@ export const buildWorkbook = (entries: ReportTimeSpan[], settings: ExportSetting
 
     ws.getCell(3, 1).value = 'Monat:';
     ws.getCell(3, 1).font = boldFont;
-    ws.getCell(3, 2).value = month.locale('de').format('MMMM');
+    ws.getCell(3, 2).value = GERMAN_MONTHS[month.month()];
     ws.getCell(3, 2).font = normalFont;
     ws.getCell(3, 2).border = {bottom: {style: 'thin'}};
     ws.getCell(3, 4).value = 'Jahr:';
@@ -159,12 +154,13 @@ export const buildWorkbook = (entries: ReportTimeSpan[], settings: ExportSetting
     });
 
     let currentRow = 7;
+    let entryId = 1;
     for (const entry of sortedEntries) {
         const entryMoment = moment(entry.start);
         const endTimeValue = entry.end ? getExcelTimeValue(moment(entry.end)) : null;
 
         ws.addRow([
-            getDayOfMonth(entryMoment),
+            entryId,
             getExcelDateString(entryMoment),
             getExcelTimeValue(entryMoment),
             endTimeValue,
@@ -174,6 +170,7 @@ export const buildWorkbook = (entries: ReportTimeSpan[], settings: ExportSetting
             entry.note,
         ]);
         currentRow++;
+        entryId++;
     }
 
     const lastDataRow = currentRow - 1;

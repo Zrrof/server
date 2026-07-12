@@ -181,11 +181,11 @@ export const ReportsPage = () => {
                     onChange={(filters) => setSettings({...settings, filters})}
                 />
                 <div style={{marginTop: 16}}>
-                    <Button variant="contained" color="primary" onClick={() => downloadCsv(filtered)}>
-                        CSV exportieren
-                    </Button>{' '}
-                    <Button variant="outlined" onClick={() => setExcelDialogOpen(true)}>
+                    <Button variant="contained" color="primary" onClick={() => setExcelDialogOpen(true)}>
                         Excel exportieren
+                    </Button>{' '}
+                    <Button variant="outlined" onClick={() => downloadCsv(filtered)}>
+                        CSV exportieren
                     </Button>{' '}
                     {excelDialogOpen && (
                         <ExcelExportDialog

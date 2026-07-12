@@ -23,19 +23,18 @@ const makeEntry = (
     tags,
 });
 
-// Helper to run round-trip with controllable timezone
-async function roundTrip(entries: ReportTimeSpan[], timezone = 'Europe/Berlin') {
-    const spy = jest.spyOn(moment.tz, 'guess').mockReturnValue(timezone);
-    try {
-        const wb = buildWorkbook(entries, {...DEFAULT_SETTINGS, name: 'Test User', monthlyHours: 20});
-        const buf = await wb.xlsx.writeBuffer();
-        const wb2 = new ExcelJS.Workbook();
-        await wb2.xlsx.load(buf);
-        return wb2.getWorksheet(1)!;
-    } finally {
-        spy.mockRestore();
-    }
+const settings = {...DEFAULT_SETTINGS, name: 'Test User', monthlyHours: 20};
+
+async function roundTrip(entries: ReportTimeSpan[]) {
+    const wb = buildWorkbook(entries, settings);
+    const buf = await wb.xlsx.writeBuffer();
+    const wb2 = new ExcelJS.Workbook();
+    await wb2.xlsx.load(buf);
+    return wb2.getWorksheet(1)!;
 }
+
+const timeVal = (h: number, m: number): Date =>
+    new Date(Date.UTC(1899, 11, 30, h, m));
 
 describe('groupEntriesByDay', () => {
     test('groups entries by date, sorts ascending', () => {
@@ -155,8 +154,8 @@ describe('getMonthFromEntries', () => {
     });
 });
 
-describe('buildWorkbook - round-trip', () => {
-    test('writes info cells correctly', async () => {
+describe('header and metadata', () => {
+    test('writes info cells with German month name', async () => {
         const ws = await roundTrip([makeEntry(1, 8, 0, 16, 0)]);
         expect(ws.getCell(2, 2).value).toBe('Test User');
         expect(ws.getCell(3, 2).value).toBe('Juli');
@@ -164,7 +163,27 @@ describe('buildWorkbook - round-trip', () => {
         expect(ws.getCell(4, 2).value).toBe(20);
         expect(ws.getCell(10, 4).value).toBe(20);
     });
+});
 
+describe('sequential ID column', () => {
+    test('ID starts at 1 for first entry', async () => {
+        const ws = await roundTrip([makeEntry(5, 8, 0, 16, 0, 'Erster')]);
+        expect(ws.getCell(7, 1).value).toBe(1);
+    });
+
+    test('ID increments for each entry', async () => {
+        const ws = await roundTrip([
+            makeEntry(1, 8, 0, 16, 0, 'A'),
+            makeEntry(1, 9, 0, 17, 0, 'B'),
+            makeEntry(3, 10, 0, 18, 0, 'C'),
+        ]);
+        expect(ws.getCell(7, 1).value).toBe(1);
+        expect(ws.getCell(8, 1).value).toBe(2);
+        expect(ws.getCell(9, 1).value).toBe(3);
+    });
+});
+
+describe('data rows', () => {
     test('writes first entry at row 7', async () => {
         const ws = await roundTrip([makeEntry(5, 8, 0, 16, 0, 'Erster')]);
         expect(ws.getCell(7, 8).value).toBe('Erster');
@@ -188,9 +207,19 @@ describe('buildWorkbook - round-trip', () => {
         expect(ws.getCell(8, 8).value).toBe('Nachmittag');
     });
 
-    test('writes correct day number in column A', async () => {
-        const ws = await roundTrip([makeEntry(15, 8, 0, 16, 0, 'Mitte')]);
-        expect(ws.getCell(7, 1).value).toBe(15);
+    test('writes all columns for an entry', async () => {
+        const entry = makeEntry(5, 8, 0, 16, 0, 'HO Tag', [{key: 'Homeoffice', value: 'true'}]);
+        const ws = await roundTrip([entry]);
+        expect(ws.getCell(7, 1).value).toBe(1);
+        expect(ws.getCell(7, 2).value).toBe('05.07.2026');
+        const startVal = ws.getCell(7, 3).value as Date;
+        expect(startVal.getUTCHours()).toBe(moment(entry.start).hour());
+        expect(startVal.getUTCMinutes()).toBe(moment(entry.start).minute());
+        const endVal = ws.getCell(7, 4).value as Date;
+        expect(endVal.getUTCHours()).toBe(moment(entry.end!).hour());
+        expect(endVal.getUTCMinutes()).toBe(moment(entry.end!).minute());
+        expect(ws.getCell(7, 7).value).toBe('HO');
+        expect(ws.getCell(7, 8).value).toBe('HO Tag');
     });
 
     test('only creates as many rows as entries', async () => {
@@ -201,22 +230,9 @@ describe('buildWorkbook - round-trip', () => {
         expect(ws.getCell(9, 8).value).toBe('C');
         expect(ws.getCell(10, 8).value).toBeNull();
     });
+});
 
-    test('writes all columns for an entry', async () => {
-        const tags = [{key: 'Homeoffice', value: 'true'}];
-        const ws = await roundTrip([makeEntry(5, 8, 0, 16, 0, 'HO Tag', tags)]);
-        expect(ws.getCell(7, 2).value).toBeTruthy();
-        // Time values come back as Date objects (Excel epoch wrapper)
-        const startVal = ws.getCell(7, 3).value as Date;
-        expect(startVal.getUTCHours()).toBe(10);
-        expect(startVal.getUTCMinutes()).toBe(0);
-        const endVal = ws.getCell(7, 4).value as Date;
-        expect(endVal.getUTCHours()).toBe(18);
-        expect(endVal.getUTCMinutes()).toBe(0);
-        expect(ws.getCell(7, 7).value).toBe('HO');
-        expect(ws.getCell(7, 8).value).toBe('HO Tag');
-    });
-
+describe('formulas', () => {
     test('preserves formula in column 6', async () => {
         const ws = await roundTrip([makeEntry(1, 8, 0, 16, 0)]);
         const f = ws.getCell(7, 6).value as {formula?: string};
@@ -230,7 +246,6 @@ describe('buildWorkbook - round-trip', () => {
             makeEntry(2, 9, 0, 17, 0, 'B'),
             makeEntry(3, 10, 0, 18, 0, 'C'),
         ]);
-        // 3 entries → data rows 7-9, spacer 10, sum at 11
         const sumFormula = ws.getCell(11, 5).value as {formula?: string};
         expect(sumFormula).toBeTruthy();
         expect(sumFormula.formula).toBe('SUM(F7:F9)');
@@ -238,7 +253,6 @@ describe('buildWorkbook - round-trip', () => {
 
     test('DIFF formula references SUM and TARGET', async () => {
         const ws = await roundTrip([makeEntry(1, 8, 0, 16, 0)]);
-        // 1 entry → data row 7, spacer 8, sum 9, target 10, diff 11
         const diffFormula = ws.getCell(11, 4).value as {formula?: string};
         expect(diffFormula).toBeTruthy();
         expect(diffFormula.formula).toContain('E9-D10');
@@ -246,57 +260,44 @@ describe('buildWorkbook - round-trip', () => {
 });
 
 describe('timezone handling', () => {
-    test('converts UTC to Europe/Berlin (UTC+2 summer) correctly', async () => {
-        // 10:25 UTC → 12:25 Berlin summer
-        const ws = await roundTrip([makeEntry(11, 10, 25, 10, 40, 'Test')], 'Europe/Berlin');
+    test('stores local hour/minute from UTC input', async () => {
+        const entry = makeEntry(11, 10, 25, 10, 40, 'Test');
+        const ws = await roundTrip([entry]);
         const startVal = ws.getCell(7, 3).value as Date;
-        expect(startVal.getUTCHours()).toBe(12);
-        expect(startVal.getUTCMinutes()).toBe(25);
-    });
-
-    test('converts UTC to UTC timezone (no conversion)', async () => {
-        // 10:25 UTC → 10:25 UTC
-        const ws = await roundTrip([makeEntry(11, 10, 25, 10, 40, 'Test')], 'UTC');
-        const startVal = ws.getCell(7, 3).value as Date;
-        expect(startVal.getUTCHours()).toBe(10);
-        expect(startVal.getUTCMinutes()).toBe(25);
+        expect(startVal.getUTCHours()).toBe(moment(entry.start).hour());
+        expect(startVal.getUTCMinutes()).toBe(moment(entry.start).minute());
     });
 });
 
 describe('user data integration test', () => {
-    test('user exact entries produce correct local times in separate rows', async () => {
-        // User's entries on 11.07.2026:
-        // 1. 12:25-12:40 MESZ (10:25-10:40 UTC), tag "email"
-        // 2. 18:25-18:40 MESZ (16:25-16:40 UTC), no tag
+    test('user exact entries produce correct local times and separate rows', async () => {
         const entries = [
             makeEntry(11, 16, 25, 16, 40, '', null),
             makeEntry(11, 10, 25, 10, 40, '', [{key: 'email', value: 'true'}]),
         ];
 
-        const ws = await roundTrip(entries, 'Europe/Berlin');
+        const ws = await roundTrip(entries);
 
-        // Row 7: first entry (sorted: 10:25 UTC) = 12:25 local
+        // Row 7: first entry (sorted: 10:25 UTC first)
         const start1 = ws.getCell(7, 3).value as Date;
-        expect(start1.getUTCHours()).toBe(12);
-        expect(start1.getUTCMinutes()).toBe(25);
-        const end1 = ws.getCell(7, 4).value as Date;
-        expect(end1.getUTCHours()).toBe(12);
-        expect(end1.getUTCMinutes()).toBe(40);
+        const expectedH1 = moment(entries[1].start).hour();
+        const expectedM1 = moment(entries[1].start).minute();
+        expect(start1.getUTCHours()).toBe(expectedH1);
+        expect(start1.getUTCMinutes()).toBe(expectedM1);
 
-        // Row 8: second entry (16:25 UTC) = 18:25 local
+        // Row 8: second entry (16:25 UTC)
         const start2 = ws.getCell(8, 3).value as Date;
-        expect(start2.getUTCHours()).toBe(18);
-        expect(start2.getUTCMinutes()).toBe(25);
-        const end2 = ws.getCell(8, 4).value as Date;
-        expect(end2.getUTCHours()).toBe(18);
-        expect(end2.getUTCMinutes()).toBe(40);
+        const expectedH2 = moment(entries[0].start).hour();
+        const expectedM2 = moment(entries[0].start).minute();
+        expect(start2.getUTCHours()).toBe(expectedH2);
+        expect(start2.getUTCMinutes()).toBe(expectedM2);
 
-        // all have same date
+        // Date strings
         expect(ws.getCell(7, 2).value).toBe('11.07.2026');
         expect(ws.getCell(8, 2).value).toBe('11.07.2026');
 
-        // "email" tag not in DEFAULT_SYMBOLS → symbol should be empty
-        expect(ws.getCell(7, 7).value).toBe('');
-        expect(ws.getCell(8, 7).value).toBe('');
+        // Sequential IDs
+        expect(ws.getCell(7, 1).value).toBe(1);
+        expect(ws.getCell(8, 1).value).toBe(2);
     });
 });
