@@ -249,10 +249,11 @@ export const buildWorkbook = (entries: ReportTimeSpan[], settings: ExportSetting
     ws.getCell(targetRow, 5).font = normalFont;
 
     ws.getCell(targetRow + 1, 1).font = boldFont;
-    ws.getCell(targetRow + 1, 5).font = {bold: true, size: 11, name: 'Calibri', color: {argb: 'FF0000'}};
-    ws.getCell(targetRow + 1, 5).alignment = {horizontal: 'center', vertical: 'middle'};
-    ws.getCell(targetRow + 1, 5).numFmt = '0.00';
-    ws.getCell(targetRow + 1, 5).border = border;
+    ws.getCell(targetRow + 1, 4).font = {bold: true, size: 11, name: 'Calibri', color: {argb: 'FF0000'}};
+    ws.getCell(targetRow + 1, 4).alignment = {horizontal: 'center', vertical: 'middle'};
+    ws.getCell(targetRow + 1, 4).numFmt = '0.00';
+    ws.getCell(targetRow + 1, 4).border = border;
+    ws.getCell(targetRow + 1, 5).font = normalFont;
     ws.getCell(targetRow + 1, 6).font = normalFont;
 
     ws.pageSetup.orientation = 'landscape';

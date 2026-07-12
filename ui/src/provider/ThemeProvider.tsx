@@ -187,7 +187,7 @@ const themes: Record<SettingTheme, Theme> = {
 export const ThemeProvider: React.FC = ({children}) => {
     const {theme} = useSettings();
     return (
-        <MuiThemeProvider theme={themes[theme] || themes[SettingTheme.GruvboxDark]}>
+        <MuiThemeProvider theme={themes[theme] || themes[SettingTheme.Zrofflight]}>
             <CssBaseline />
             {children}
         </MuiThemeProvider>
