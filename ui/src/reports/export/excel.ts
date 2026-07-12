@@ -1,8 +1,19 @@
 import ExcelJS from 'exceljs';
-import moment from 'moment';
+import moment from 'moment-timezone';
 import {ReportTimeSpan} from '../types';
 import {ExportSettings} from './excelSettings';
 import {getSymbolForTags} from './symbolMapping';
+
+const toLocalTz = (m: moment.Moment): moment.Moment => m.clone().tz(moment.tz.guess());
+
+const getExcelDateString = (m: moment.Moment): string => toLocalTz(m).format('DD.MM.YYYY');
+
+const getExcelTimeValue = (m: moment.Moment): number => {
+    const local = toLocalTz(m);
+    return local.hour() / 24 + local.minute() / 1440;
+};
+
+const getDayOfMonth = (m: moment.Moment): number => toLocalTz(m).date();
 
 interface DayEntry {
     start: moment.Moment;
@@ -90,7 +101,9 @@ export const buildWorkbook = (entries: ReportTimeSpan[], settings: ExportSetting
     const month = getMonthFromEntries(entries);
     if (!month) { throw new Error('No entries to build workbook'); }
 
-    const groupedDays = groupEntriesByDay(entries);
+    const sortedEntries = [...entries].sort((a, b) =>
+        moment(a.start).valueOf() - moment(b.start).valueOf(),
+    );
 
     const wb = new ExcelJS.Workbook();
     wb.creator = 'Trackit';
@@ -118,7 +131,7 @@ export const buildWorkbook = (entries: ReportTimeSpan[], settings: ExportSetting
 
     ws.getCell(3, 1).value = 'Monat:';
     ws.getCell(3, 1).font = boldFont;
-    ws.getCell(3, 2).value = month.format('MMMM');
+    ws.getCell(3, 2).value = month.locale('de').format('MMMM');
     ws.getCell(3, 2).font = normalFont;
     ws.getCell(3, 2).border = {bottom: {style: 'thin'}};
     ws.getCell(3, 4).value = 'Jahr:';
@@ -146,22 +159,19 @@ export const buildWorkbook = (entries: ReportTimeSpan[], settings: ExportSetting
     });
 
     let currentRow = 7;
-    for (const groupedDay of groupedDays) {
-        const dayOfMonth = groupedDay.date.date();
-        const merged = mergeDayEntries(groupedDay.entries);
-        const combinedNote = combineNotes(groupedDay.entries);
-        const combinedTags = getCombinedTags(groupedDay.entries);
-        const symbol = getSymbolForTags(combinedTags, settings.symbolMappings);
+    for (const entry of sortedEntries) {
+        const entryMoment = moment(entry.start);
+        const endTimeValue = entry.end ? getExcelTimeValue(moment(entry.end)) : null;
 
         ws.addRow([
-            dayOfMonth,
-            groupedDay.date.toDate(),
-            merged.start.toDate(),
-            merged.end ? merged.end.toDate() : null,
+            getDayOfMonth(entryMoment),
+            getExcelDateString(entryMoment),
+            getExcelTimeValue(entryMoment),
+            endTimeValue,
             0,
             {formula: `MAX(0,(D${currentRow}-C${currentRow}-E${currentRow})*24)`},
-            symbol,
-            combinedNote,
+            getSymbolForTags(entry.tags, settings.symbolMappings),
+            entry.note,
         ]);
         currentRow++;
     }
