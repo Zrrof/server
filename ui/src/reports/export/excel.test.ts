@@ -10,6 +10,7 @@ import {
     getMonthFromEntries,
     buildWorkbook,
 } from './excel';
+import {getSymbolForTags} from './symbolMapping';
 
 const makeEntry = (
     day: number, startH: number, startM: number,
@@ -259,6 +260,49 @@ describe('formulas', () => {
     });
 });
 
+describe('getSymbolForTags', () => {
+    const defaultMappings = DEFAULT_SETTINGS.symbolMappings;
+
+    test('returns empty for null tags', () => {
+        expect(getSymbolForTags(null, defaultMappings)).toBe('');
+    });
+
+    test('returns empty for empty tags array', () => {
+        expect(getSymbolForTags([], defaultMappings)).toBe('');
+    });
+
+    test('returns symbol for a priority tag', () => {
+        expect(getSymbolForTags([{key: 'Homeoffice', value: 'true'}], defaultMappings)).toBe('HO');
+    });
+
+    test('higher priority tag wins over lower priority', () => {
+        expect(getSymbolForTags(
+            [{key: 'Homeoffice', value: 'true'}, {key: 'Krank', value: 'true'}],
+            defaultMappings,
+        )).toBe('K');
+    });
+
+    test('returns symbol for non-priority mapped tag', () => {
+        const customMappings = [{tag: 'ProjektA', symbol: 'PA'}];
+        expect(getSymbolForTags([{key: 'ProjektA', value: 'alpha'}], customMappings)).toBe('PA');
+    });
+
+    test('returns empty for unmapped tag', () => {
+        expect(getSymbolForTags([{key: 'email', value: 'true'}], defaultMappings)).toBe('');
+    });
+
+    test('priority tag takes precedence over non-priority in same entry', () => {
+        const customMappings = [
+            ...defaultMappings,
+            {tag: 'email', symbol: 'EM'},
+        ];
+        expect(getSymbolForTags(
+            [{key: 'email', value: 'true'}, {key: 'Homeoffice', value: 'true'}],
+            customMappings,
+        )).toBe('HO');
+    });
+});
+
 describe('timezone handling', () => {
     test('stores local hour/minute from UTC input', async () => {
         const entry = makeEntry(11, 10, 25, 10, 40, 'Test');
@@ -266,6 +310,60 @@ describe('timezone handling', () => {
         const startVal = ws.getCell(7, 3).value as Date;
         expect(startVal.getUTCHours()).toBe(moment(entry.start).hour());
         expect(startVal.getUTCMinutes()).toBe(moment(entry.start).minute());
+    });
+});
+
+describe('symbols in exported Excel', () => {
+    test('entry with priority tag shows correct symbol in column 7', async () => {
+        const ws = await roundTrip([
+            makeEntry(1, 8, 0, 16, 0, 'HO', [{key: 'Homeoffice', value: 'true'}]),
+        ]);
+        expect(ws.getCell(7, 7).value).toBe('HO');
+    });
+
+    test('entry without tags shows empty symbol', async () => {
+        const ws = await roundTrip([makeEntry(1, 8, 0, 16, 0, 'no tags')]);
+        expect(ws.getCell(7, 7).value).toBe('');
+    });
+
+    test('entry with unmapped tag shows empty symbol', async () => {
+        const ws = await roundTrip([
+            makeEntry(1, 8, 0, 16, 0, 'email', [{key: 'email', value: 'true'}]),
+        ]);
+        expect(ws.getCell(7, 7).value).toBe('');
+    });
+
+    test('entries with different tags get their own symbol', async () => {
+        const ws = await roundTrip([
+            makeEntry(1, 8, 0, 12, 0, 'HO', [{key: 'Homeoffice', value: 'true'}]),
+            makeEntry(1, 13, 0, 17, 0, 'UR', [{key: 'Urlaub', value: 'true'}]),
+        ]);
+        expect(ws.getCell(7, 7).value).toBe('HO');
+        expect(ws.getCell(8, 7).value).toBe('U');
+    });
+
+    test('priority tag wins when entry has multiple tags', async () => {
+        const ws = await roundTrip([
+            makeEntry(1, 8, 0, 16, 0, 'multi',
+                [{key: 'Homeoffice', value: 'true'}, {key: 'Krank', value: 'true'}]),
+        ]);
+        expect(ws.getCell(7, 7).value).toBe('K');
+    });
+
+    test('custom symbols override defaults', async () => {
+        const customSettings = {
+            ...settings,
+            symbolMappings: [{tag: 'Homeoffice', symbol: 'HM'}],
+        };
+        const wb = buildWorkbook(
+            [makeEntry(1, 8, 0, 16, 0, 'HO', [{key: 'Homeoffice', value: 'true'}])],
+            customSettings,
+        );
+        const buf = await wb.xlsx.writeBuffer();
+        const wb2 = new ExcelJS.Workbook();
+        await wb2.xlsx.load(buf);
+        const ws = wb2.getWorksheet(1)!;
+        expect(ws.getCell(7, 7).value).toBe('HM');
     });
 });
 
