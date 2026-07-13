@@ -290,7 +290,7 @@ export const buildWorkbook = (entries: ReportTimeSpan[], settings: ExportSetting
 
     if (settings.name) {
         ws.addRow(['', '', '', settings.name]);
-        ws.getCell(footerRow, 4).font = normalFont;
+        ws.getCell(footerRow, 4).font = {size: 14, name: 'Segoe Script', italic: true, color: {argb: '1E3A5F'}};
         ws.getCell(footerRow, 4).alignment = {horizontal: 'center', vertical: 'middle'};
     }
 
