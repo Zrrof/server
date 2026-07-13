@@ -92,7 +92,7 @@ export const ReportsFilters: React.FC<{
                     <Select multiple value={filters.tags} onChange={(e) => set({tags: e.target.value as string[]})}>
                         {tags.map((tag) => (
                             <MenuItem key={tag} value={tag}>
-                                <Checkbox checked={filters.tags.indexOf(tag) >= 0} />
+                                <Checkbox checked={filters.tags.indexOf(tag) >= 0} style={{color: '#22c55e'}} />
                                 {tag}
                             </MenuItem>
                         ))}

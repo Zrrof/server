@@ -137,6 +137,7 @@ export const ReportsTable: React.FC<{
                     <label key={column.id} style={{display: 'flex', alignItems: 'center'}}>
                         <Checkbox
                             checked={column.visible}
+                            style={{color: '#22c55e'}}
                             onChange={(e) =>
                                 onColumns(columns.map((c) => (c.id === column.id ? {...c, visible: e.target.checked} : c)))
                             }
