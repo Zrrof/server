@@ -14,9 +14,13 @@ const findMapping = (
     value: string,
     mappings: SymbolMapping[],
 ): SymbolMapping | undefined => {
-    const fullTag = `${key}:${value}`;
-    return mappings.find((m) => m.tag === fullTag) || mappings.find((m) => m.tag === key);
+    const fullTag = `${key}:${value}`.toLowerCase();
+    return mappings.find((m) => m.tag.toLowerCase() === fullTag)
+        || mappings.find((m) => m.tag.toLowerCase() === key.toLowerCase());
 };
+
+const isPriorityTag = (tag: string): boolean =>
+    TAG_PRIORITY.some((p) => p.toLowerCase() === tag.toLowerCase());
 
 export const getSymbolForTags = (
     entryTags: Array<{key: string; value: string}> | null,
@@ -25,10 +29,11 @@ export const getSymbolForTags = (
     if (!entryTags || entryTags.length === 0) {
         return '';
     }
-    const tagKeys = entryTags.map((t) => t.key);
+    const tagKeysLower = entryTags.map((t) => t.key.toLowerCase());
     for (const priorityTag of TAG_PRIORITY) {
-        if (tagKeys.includes(priorityTag)) {
-            const entryTag = entryTags.find((t) => t.key === priorityTag);
+        const lowerPri = priorityTag.toLowerCase();
+        if (tagKeysLower.includes(lowerPri)) {
+            const entryTag = entryTags.find((t) => t.key.toLowerCase() === lowerPri);
             if (entryTag) {
                 const mapping = findMapping(entryTag.key, entryTag.value, mappings);
                 if (mapping) {
@@ -39,7 +44,7 @@ export const getSymbolForTags = (
     }
     for (const entryTag of entryTags) {
         const mapping = findMapping(entryTag.key, entryTag.value, mappings);
-        if (mapping && !TAG_PRIORITY.includes(mapping.tag)) {
+        if (mapping && !isPriorityTag(mapping.tag)) {
             return mapping.symbol;
         }
     }

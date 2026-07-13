@@ -334,6 +334,40 @@ describe('getSymbolForTags', () => {
         )).toBe('PA');
     });
 
+    test('matches lowercase system tags against capitalized mappings', () => {
+        const mappings = [{tag: 'Homeoffice', symbol: 'HO'}];
+        expect(getSymbolForTags(
+            [{key: 'homeoffice', value: 'true'}],
+            mappings,
+        )).toBe('HO');
+    });
+
+    test('priority loop matches lowercase tags', () => {
+        const mappings = [{tag: 'Urlaub:Sommer', symbol: 'S'}];
+        expect(getSymbolForTags(
+            [{key: 'urlaub', value: 'sommer'}],
+            mappings,
+        )).toBe('S');
+    });
+
+    test('falls back to key-only with lowercase system tags', () => {
+        const mappings = [
+            {tag: 'Urlaub:Sommer', symbol: 'S'},
+            {tag: 'Urlaub', symbol: 'U'},
+        ];
+        expect(getSymbolForTags(
+            [{key: 'urlaub', value: 'winter'}],
+            mappings,
+        )).toBe('U');
+    });
+
+    test('case-insensitive mapping tag entry matches lowercase system tag', () => {
+        const mappings = [{tag: 'homeoffice', symbol: 'HO'}];
+        expect(getSymbolForTags(
+            [{key: 'Homeoffice', value: 'true'}],
+            mappings,
+        )).toBe('HO');
+    });
 });
 
 describe('timezone handling', () => {
@@ -390,6 +424,22 @@ describe('symbols in exported Excel', () => {
         };
         const wb = buildWorkbook(
             [makeEntry(1, 8, 0, 16, 0, 'Urlaub:Sommer', [{key: 'Urlaub', value: 'Sommer'}])],
+            customSettings,
+        );
+        const buf = await wb.xlsx.writeBuffer();
+        const wb2 = new ExcelJS.Workbook();
+        await wb2.xlsx.load(buf);
+        const ws = wb2.getWorksheet(1)!;
+        expect(ws.getCell(7, 7).value).toBe('S');
+    });
+
+    test('lowercase tag from system matches mapping in full export', async () => {
+        const customSettings = {
+            ...settings,
+            symbolMappings: [{tag: 'Urlaub:Sommer', symbol: 'S'}],
+        };
+        const wb = buildWorkbook(
+            [makeEntry(1, 8, 0, 16, 0, 'urlaub:sommer', [{key: 'urlaub', value: 'sommer'}])],
             customSettings,
         );
         const buf = await wb.xlsx.writeBuffer();
