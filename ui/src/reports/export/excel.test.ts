@@ -301,6 +301,39 @@ describe('getSymbolForTags', () => {
             customMappings,
         )).toBe('HO');
     });
+
+    test('matches key:value exact mapping over key-only mapping', () => {
+        const mappings = [
+            {tag: 'Urlaub:Sommer', symbol: 'S'},
+            {tag: 'Urlaub', symbol: 'U'},
+        ];
+        expect(getSymbolForTags(
+            [{key: 'Urlaub', value: 'Sommer'}],
+            mappings,
+        )).toBe('S');
+    });
+
+    test('falls back to key-only mapping when no key:value match', () => {
+        const mappings = [
+            {tag: 'Urlaub:Sommer', symbol: 'S'},
+            {tag: 'Urlaub', symbol: 'U'},
+        ];
+        expect(getSymbolForTags(
+            [{key: 'Urlaub', value: 'Winter'}],
+            mappings,
+        )).toBe('U');
+    });
+
+    test('key:value match for non-priority tag', () => {
+        const mappings = [
+            {tag: 'Projekt:A', symbol: 'PA'},
+        ];
+        expect(getSymbolForTags(
+            [{key: 'Projekt', value: 'A'}],
+            mappings,
+        )).toBe('PA');
+    });
+
 });
 
 describe('timezone handling', () => {
@@ -348,6 +381,41 @@ describe('symbols in exported Excel', () => {
                 [{key: 'Homeoffice', value: 'true'}, {key: 'Krank', value: 'true'}]),
         ]);
         expect(ws.getCell(7, 7).value).toBe('K');
+    });
+
+    test('key:value tag matching works in full export', async () => {
+        const customSettings = {
+            ...settings,
+            symbolMappings: [{tag: 'Urlaub:Sommer', symbol: 'S'}],
+        };
+        const wb = buildWorkbook(
+            [makeEntry(1, 8, 0, 16, 0, 'Urlaub:Sommer', [{key: 'Urlaub', value: 'Sommer'}])],
+            customSettings,
+        );
+        const buf = await wb.xlsx.writeBuffer();
+        const wb2 = new ExcelJS.Workbook();
+        await wb2.xlsx.load(buf);
+        const ws = wb2.getWorksheet(1)!;
+        expect(ws.getCell(7, 7).value).toBe('S');
+    });
+
+    test('key:value falls back to key-only in full export', async () => {
+        const customSettings = {
+            ...settings,
+            symbolMappings: [
+                {tag: 'Urlaub:Sommer', symbol: 'S'},
+                {tag: 'Urlaub', symbol: 'U'},
+            ],
+        };
+        const wb = buildWorkbook(
+            [makeEntry(1, 8, 0, 16, 0, 'Urlaub:Winter', [{key: 'Urlaub', value: 'Winter'}])],
+            customSettings,
+        );
+        const buf = await wb.xlsx.writeBuffer();
+        const wb2 = new ExcelJS.Workbook();
+        await wb2.xlsx.load(buf);
+        const ws = wb2.getWorksheet(1)!;
+        expect(ws.getCell(7, 7).value).toBe('U');
     });
 
     test('custom symbols override defaults', async () => {
