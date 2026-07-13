@@ -182,12 +182,89 @@ const themes: Record<SettingTheme, Theme> = {
             type: 'dark',
         },
     }),
+    [SettingTheme.Zrrofviolet]: createMuiTheme({
+        overrides: {
+            MuiLink: {
+                root: {
+                    color: '#8b5cf6',
+                },
+            },
+            MuiIconButton: {
+                root: {
+                    color: 'inherit',
+                },
+            },
+            MuiListItemIcon: {
+                root: {
+                    color: 'inherit',
+                },
+            },
+            MuiToolbar: {
+                root: {
+                    background: '#8b5cf6',
+                    color: '#ffffff',
+                },
+            },
+            MuiButton: {
+                containedPrimary: {
+                    color: '#ffffff',
+                },
+            },
+            MuiChip: {
+                root: {
+                    backgroundColor: '#ede9fe',
+                    color: '#8b5cf6',
+                },
+            },
+            MuiPaper: {
+                rounded: {
+                    borderRadius: 12,
+                },
+            },
+            MuiCard: {
+                root: {
+                    borderRadius: 12,
+                },
+            },
+        },
+        palette: {
+            background: {
+                default: '#faf8ff',
+                paper: '#ffffff',
+            },
+            text: {
+                primary: '#131b2e',
+                secondary: '#494454',
+            },
+            primary: {
+                main: '#8b5cf6',
+                light: '#a78bfa',
+                dark: '#7c3aed',
+            },
+            secondary: {
+                main: '#ede9fe',
+                light: '#f5f3ff',
+                dark: '#c4b5fd',
+                contrastText: '#8b5cf6',
+            },
+            error: {
+                main: '#ba1a1a',
+            },
+            type: 'light',
+        },
+        typography: {
+            fontFamily: 'Geist, Inter, "Helvetica Neue", Arial, sans-serif',
+        },
+        shape: {
+            borderRadius: 8,
+        },
+    }),
 };
 
 export const ThemeProvider: React.FC = ({children}) => {
     const {theme} = useSettings();
     return (
-        <MuiThemeProvider theme={themes[theme] || themes[SettingTheme.Zrofflight]}>
+        <MuiThemeProvider theme={themes[theme] || themes[SettingTheme.Zrrofviolet]}>
             <CssBaseline />
             {children}
         </MuiThemeProvider>

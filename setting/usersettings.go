@@ -62,14 +62,14 @@ func toInternalTheme(theme gqlmodel.Theme) string {
 	if gqlmodel.Theme(theme.String()).IsValid() {
 		return theme.String()
 	}
-	return model.ThemeGruvboxDark
+	return model.ThemeZrrofviolet
 }
 
 func toExternalTheme(theme string) gqlmodel.Theme {
 	if gqlmodel.Theme(theme).IsValid() {
 		return gqlmodel.Theme(theme)
 	}
-	return gqlmodel.ThemeGruvboxDark
+	return gqlmodel.ThemeZrrofviolet
 }
 
 func toExternalWeekday(weekday time.Weekday) gqlmodel.WeekDay {

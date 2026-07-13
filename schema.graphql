@@ -83,7 +83,7 @@ enum WeekDay {
 }
 
 enum Theme {
-    GruvboxDark, GruvboxLight, MaterialDark, MaterialLight, Zrofflight
+    GruvboxDark, GruvboxLight, MaterialDark, MaterialLight, Zrofflight, Zrrofviolet
 }
 
 enum DateLocale {
