@@ -256,6 +256,44 @@ export const buildWorkbook = (entries: ReportTimeSpan[], settings: ExportSetting
     ws.getCell(targetRow + 1, 5).font = normalFont;
     ws.getCell(targetRow + 1, 6).font = normalFont;
 
+    let footerRow = targetRow + 2;
+
+    ws.addRow([]);
+    footerRow++;
+
+    ws.addRow(['Kürzel-Erklärung:']);
+    ws.getCell(footerRow, 1).font = boldFont;
+    footerRow++;
+
+    for (const mapping of settings.symbolMappings) {
+        ws.addRow([mapping.symbol, mapping.tag]);
+        ws.getCell(footerRow, 1).font = normalFont;
+        ws.getCell(footerRow, 2).font = normalFont;
+        footerRow++;
+    }
+
+    ws.addRow([]);
+    footerRow++;
+
+    ws.addRow(['Datum:', '', '', 'Unterschrift:']);
+    ws.getCell(footerRow, 1).font = boldFont;
+    ws.getCell(footerRow, 4).font = boldFont;
+    footerRow++;
+
+    ws.mergeCells(footerRow, 1, footerRow, 3);
+    ws.getCell(footerRow, 1).value = '________________';
+    ws.getCell(footerRow, 1).font = normalFont;
+    ws.mergeCells(footerRow, 4, footerRow, 6);
+    ws.getCell(footerRow, 4).value = '________________';
+    ws.getCell(footerRow, 4).font = normalFont;
+    footerRow++;
+
+    if (settings.name) {
+        ws.addRow(['', '', '', settings.name]);
+        ws.getCell(footerRow, 4).font = normalFont;
+        ws.getCell(footerRow, 4).alignment = {horizontal: 'center', vertical: 'middle'};
+    }
+
     ws.pageSetup.orientation = 'landscape';
     ws.pageSetup.fitToPage = true;
     ws.pageSetup.fitToWidth = 1;

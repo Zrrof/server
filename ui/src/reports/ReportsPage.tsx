@@ -169,7 +169,7 @@ export const ReportsPage = () => {
     ).sort();
     const filtered = sortEntries(filterEntries(entries, settings.filters), settings.sort);
     return (
-        <div style={{maxWidth: 1600, margin: '0 auto'}} className="reports-page">
+        <div style={{maxWidth: 1200, margin: '0 auto'}} className="reports-page">
             <ReportsPrintHeader filters={settings.filters} />
             <Typography variant="h4" component="h1" gutterBottom className="reports-screen-title">
                 Reports
