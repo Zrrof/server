@@ -80,6 +80,7 @@ const normalizeFilters = (saved: Partial<ReportFilters>): ReportFilters => ({
             ? Math.max(0, saved.customDurationMinutes)
             : DEFAULT_FILTERS.customDurationMinutes,
     groupBy: saved.groupBy && GROUP_KEYS.indexOf(saved.groupBy) >= 0 ? saved.groupBy : DEFAULT_FILTERS.groupBy,
+    monthOffset: typeof saved.monthOffset === 'number' ? saved.monthOffset : DEFAULT_FILTERS.monthOffset,
 });
 
 const normalizeColumns = (saved: ReportColumn[] | undefined) => {

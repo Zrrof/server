@@ -1,7 +1,9 @@
 import * as React from 'react';
 import moment from 'moment';
 import {
+    Button,
     Checkbox,
+    Chip,
     FormControl,
     InputLabel,
     MenuItem,
@@ -14,7 +16,7 @@ import {
     TableRow,
 } from '@material-ui/core';
 import {GroupKey, ReportColumn, ReportSort, ReportTimeSpan, SortKey} from './types';
-import {durationMs, formatDuration, groupEntries, tagsToText} from './utils/reportUtils';
+import {durationMs, formatDuration, groupEntries} from './utils/reportUtils';
 
 const sortable: Record<string, SortKey> = {
     date: 'date',
@@ -66,7 +68,13 @@ export const ReportsTable: React.FC<{
             case 'duration':
                 return formatDuration(durationMs(entry));
             case 'tags':
-                return tagsToText(entry);
+                return !entry.tags || entry.tags.length === 0 ? '' : (
+                    <div style={{display: 'flex', gap: 4, flexWrap: 'wrap'}}>
+                        {entry.tags.map((tag, i) => (
+                            <Chip key={i} label={tag.value} size="small" style={{backgroundColor: '#bbf7d0', color: '#166534'}} />
+                        ))}
+                    </div>
+                );
             case 'description':
                 return entry.note;
             default:
@@ -154,16 +162,16 @@ export const ReportsTable: React.FC<{
                 <TableBody>{groupBy === 'none' ? paged.map(entryRow) : groupedRows}</TableBody>
             </Table>
             {groupBy === 'none' && pageSize !== 'all' ? (
-                <div className="reports-no-print" style={{padding: 12}}>
-                    <button disabled={page === 0} onClick={() => setPage(page - 1)}>
-                        Zurück
-                    </button>{' '}
+                <div className="reports-no-print" style={{padding: 12, display: 'flex', alignItems: 'center', gap: 8}}>
+                    <Button size="small" disabled={page === 0} onClick={() => setPage(page - 1)}>
+                        ← Zurück
+                    </Button>
                     <span>
                         Seite {page + 1} / {Math.max(1, Math.ceil(entries.length / pageSize))}
-                    </span>{' '}
-                    <button disabled={(page + 1) * pageSize >= entries.length} onClick={() => setPage(page + 1)}>
-                        Weiter
-                    </button>
+                    </span>
+                    <Button size="small" disabled={(page + 1) * pageSize >= entries.length} onClick={() => setPage(page + 1)}>
+                        Weiter →
+                    </Button>
                 </div>
             ) : null}
         </Paper>

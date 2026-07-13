@@ -9,6 +9,19 @@ export const ReportsFilters: React.FC<{
     onChange: (filters: ReportFilters) => void;
 }> = ({filters, tags, onChange}) => {
     const set = (patch: Partial<ReportFilters>) => onChange({...filters, ...patch});
+    const monthLabel = () => {
+        const name = filters.datePreset === 'lastMonth' ? 'letzter Monat' : 'dieser Monat';
+        const offset = filters.monthOffset || 0;
+        if (offset === 0) {
+            return name;
+        }
+        const d = new Date();
+        d.setDate(1);
+        d.setMonth(d.getMonth() + offset);
+        const months = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+        return months[d.getMonth()] + ' ' + d.getFullYear();
+    };
+    const showNav = filters.datePreset === 'thisMonth' || filters.datePreset === 'lastMonth';
     return (
         <Grid container spacing={2} alignItems="center">
             <Grid item xs={12} md={3}>
@@ -17,7 +30,7 @@ export const ReportsFilters: React.FC<{
             <Grid item xs={6} md={2}>
                 <FormControl fullWidth>
                     <InputLabel>Zeitraum</InputLabel>
-                    <Select value={filters.datePreset} onChange={(e) => set({datePreset: e.target.value as DatePreset})}>
+                    <Select value={filters.datePreset} onChange={(e) => set({datePreset: e.target.value as DatePreset, monthOffset: 0})}>
                         {[
                             'all',
                             'today',
@@ -35,6 +48,19 @@ export const ReportsFilters: React.FC<{
                         ))}
                     </Select>
                 </FormControl>
+                {showNav ? (
+                    <div style={{display: 'flex', alignItems: 'center', marginTop: 4, gap: 4}}>
+                        <Button size="small" onClick={() => set({monthOffset: (filters.monthOffset || 0) - 1})}>
+                            ←
+                        </Button>
+                        <span style={{fontSize: '0.875rem', whiteSpace: 'nowrap', minWidth: 90, textAlign: 'center'}}>
+                            {monthLabel()}
+                        </span>
+                        <Button size="small" onClick={() => set({monthOffset: (filters.monthOffset || 0) + 1})}>
+                            →
+                        </Button>
+                    </div>
+                ) : null}
             </Grid>
             {filters.datePreset === 'custom' ? (
                 <>

@@ -44,6 +44,7 @@ export interface ReportFilters {
     durationPreset: DurationPreset;
     customDurationMinutes: number;
     groupBy: GroupKey;
+    monthOffset: number;
 }
 
 export interface ReportColumn {

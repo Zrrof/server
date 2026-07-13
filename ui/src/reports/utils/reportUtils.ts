@@ -19,6 +19,7 @@ export const DEFAULT_FILTERS: ReportFilters = {
     durationPreset: 'all',
     customDurationMinutes: 0,
     groupBy: 'none',
+    monthOffset: 0,
 };
 
 export const tagsToText = (entry: ReportTimeSpan) => (entry.tags || []).map((tag) => tag.value).join(', ');
@@ -32,56 +33,66 @@ export const formatDuration = (ms: number) => {
 };
 
 const dateRange = (filters: ReportFilters, now: moment.Moment) => {
-    switch (filters.datePreset) {
-        case 'today':
-            return {start: now.clone().startOf('day'), end: now.clone().endOf('day')};
-        case 'yesterday':
-            return {
-                start: now
-                    .clone()
-                    .subtract(1, 'day')
-                    .startOf('day'),
-                end: now
-                    .clone()
-                    .subtract(1, 'day')
-                    .endOf('day'),
-            };
-        case 'thisWeek':
-            return {start: now.clone().startOf('isoWeek'), end: now.clone().endOf('isoWeek')};
-        case 'lastWeek':
-            return {
-                start: now
-                    .clone()
-                    .subtract(1, 'week')
-                    .startOf('isoWeek'),
-                end: now
-                    .clone()
-                    .subtract(1, 'week')
-                    .endOf('isoWeek'),
-            };
-        case 'thisMonth':
-            return {start: now.clone().startOf('month'), end: now.clone().endOf('month')};
-        case 'lastMonth':
-            return {
-                start: now
-                    .clone()
-                    .subtract(1, 'month')
-                    .startOf('month'),
-                end: now
-                    .clone()
-                    .subtract(1, 'month')
-                    .endOf('month'),
-            };
-        case 'thisYear':
-            return {start: now.clone().startOf('year'), end: now.clone().endOf('year')};
-        case 'custom':
-            return {
-                start: filters.customStart ? moment(filters.customStart).startOf('day') : null,
-                end: filters.customEnd ? moment(filters.customEnd).endOf('day') : null,
-            };
-        default:
-            return {start: null, end: null};
+    const offset = filters.monthOffset || 0;
+    const base = (() => {
+        switch (filters.datePreset) {
+            case 'today':
+                return {start: now.clone().startOf('day'), end: now.clone().endOf('day')};
+            case 'yesterday':
+                return {
+                    start: now
+                        .clone()
+                        .subtract(1, 'day')
+                        .startOf('day'),
+                    end: now
+                        .clone()
+                        .subtract(1, 'day')
+                        .endOf('day'),
+                };
+            case 'thisWeek':
+                return {start: now.clone().startOf('isoWeek'), end: now.clone().endOf('isoWeek')};
+            case 'lastWeek':
+                return {
+                    start: now
+                        .clone()
+                        .subtract(1, 'week')
+                        .startOf('isoWeek'),
+                    end: now
+                        .clone()
+                        .subtract(1, 'week')
+                        .endOf('isoWeek'),
+                };
+            case 'thisMonth':
+                return {start: now.clone().startOf('month'), end: now.clone().endOf('month')};
+            case 'lastMonth':
+                return {
+                    start: now
+                        .clone()
+                        .subtract(1, 'month')
+                        .startOf('month'),
+                    end: now
+                        .clone()
+                        .subtract(1, 'month')
+                        .endOf('month'),
+                };
+            case 'thisYear':
+                return {start: now.clone().startOf('year'), end: now.clone().endOf('year')};
+            case 'custom':
+                return {
+                    start: filters.customStart ? moment(filters.customStart).startOf('day') : null,
+                    end: filters.customEnd ? moment(filters.customEnd).endOf('day') : null,
+                };
+            default:
+                return {start: null, end: null};
+        }
+    })();
+    if (base.start && offset !== 0) {
+        base.start.add(offset, 'months');
     }
+    if (base.end && offset !== 0) {
+        base.end.add(offset, 'months');
+    }
+    return base;
 };
 
 export const filterEntries = (entries: ReportTimeSpan[], filters: ReportFilters, now = moment()) => {
