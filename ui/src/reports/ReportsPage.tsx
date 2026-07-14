@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {useQuery} from '@apollo/react-hooks';
 import {Button, Paper, Typography} from '@material-ui/core';
+import makeStyles from '@material-ui/core/styles/makeStyles';
 import * as gqlTimeSpan from '../gql/timeSpan';
 import {CenteredSpinner} from '../common/CenteredSpinner';
 import {
@@ -124,7 +125,19 @@ const readSettings = (): ReportSettings => {
     }
 };
 
+const useStyles = makeStyles((theme) => ({
+    root: {
+        maxWidth: 1200,
+        margin: '0 auto',
+        ...theme.mixins.gutters(),
+        paddingTop: theme.spacing(2),
+        paddingBottom: theme.spacing(3),
+        overflow: 'hidden',
+    },
+}));
+
 export const ReportsPage = () => {
+    const classes = useStyles();
     const [settings, setSettings] = React.useState<ReportSettings>(readSettings);
     const [excelDialogOpen, setExcelDialogOpen] = React.useState(false);
     const {data, loading, error, fetchMore} = useQuery<ReportsTimeSpansData, ReportsTimeSpansVariables>(gqlTimeSpan.TimeSpans, {
@@ -169,7 +182,7 @@ export const ReportsPage = () => {
     ).sort();
     const filtered = sortEntries(filterEntries(entries, settings.filters), settings.sort);
     return (
-        <div style={{maxWidth: 1200, margin: '0 auto'}} className="reports-page">
+        <div className={`${classes.root} reports-page`}>
             <ReportsPrintHeader filters={settings.filters} />
             <Typography variant="h4" component="h1" gutterBottom className="reports-screen-title">
                 Reports
