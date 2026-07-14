@@ -91,7 +91,7 @@ enum DateLocale {
 }
 
 enum DateTimeInputStyle {
-    Fancy, Native
+    Fancy, Native, Sidy
 }
 
 input InputReplaceOptions {

@@ -28,6 +28,7 @@ const (
 
 	DateTimeInputFancy  = "Fancy"
 	DateTimeInputNative = "Native"
+	DateTimeInputSidy   = "Sidy"
 )
 
 var daysOfWeek = map[string]time.Weekday{

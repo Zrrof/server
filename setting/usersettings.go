@@ -120,6 +120,8 @@ func toExternalDateTimeInputStyle(style string) gqlmodel.DateTimeInputStyle {
 		return gqlmodel.DateTimeInputStyleFancy
 	case model.DateTimeInputNative:
 		return gqlmodel.DateTimeInputStyleNative
+	case model.DateTimeInputSidy:
+		return gqlmodel.DateTimeInputStyleSidy
 	default:
 		return gqlmodel.DateTimeInputStyleFancy
 	}
@@ -131,6 +133,8 @@ func toInternalDateTimeInputStyle(style gqlmodel.DateTimeInputStyle) string {
 		return model.DateTimeInputFancy
 	case gqlmodel.DateTimeInputStyleNative:
 		return model.DateTimeInputNative
+	case gqlmodel.DateTimeInputStyleSidy:
+		return model.DateTimeInputSidy
 	default:
 		return model.DateTimeInputFancy
 	}
