@@ -77,6 +77,14 @@ const useStyles = makeStyles((theme) => ({
         paddingBottom: theme.spacing(2),
         paddingLeft: theme.spacing(1),
         paddingRight: theme.spacing(1),
+        width: '100%',
+        overflowX: 'hidden',
+        boxSizing: 'border-box',
+        [theme.breakpoints.up('md')]: {
+            maxWidth: 1200,
+            paddingLeft: theme.spacing(2),
+            paddingRight: theme.spacing(2),
+        },
     },
     grow: {
         flexGrow: 1,

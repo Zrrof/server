@@ -127,8 +127,6 @@ const readSettings = (): ReportSettings => {
 
 const useStyles = makeStyles((theme) => ({
     root: {
-        maxWidth: 1200,
-        margin: '0 auto',
         ...theme.mixins.gutters(),
         paddingTop: theme.spacing(2),
         paddingBottom: theme.spacing(3),

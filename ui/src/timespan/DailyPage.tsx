@@ -16,7 +16,7 @@ export const DailyPage = () => {
     const isSidy = done && dateTimeInputStyle === 'Sidy';
 
     return (
-        <div style={{margin: '1px auto', maxWidth: 1000}}>
+        <div>
             {isSidy ? (
                 <div style={{display: 'flex', justifyContent: 'center', margin: '24px 0'}}>
                     <Button

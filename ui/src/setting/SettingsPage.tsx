@@ -16,8 +16,6 @@ const useStyles = makeStyles((theme) => ({
         ...theme.mixins.gutters(),
         paddingTop: theme.spacing(1),
         paddingBottom: theme.spacing(3),
-        maxWidth: 500,
-        margin: '0 auto',
     },
 }));
 
