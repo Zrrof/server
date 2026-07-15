@@ -12,14 +12,20 @@ import (
 // SetUserSettings sets the user settings.
 func (r *ResolverForSettings) SetUserSettings(ctx context.Context, settings gqlmodel.InputUserSettings) (*gqlmodel.UserSettings, error) {
 	internal := model.UserSetting{
-		Theme:              toInternalTheme(settings.Theme),
-		FirstDayOfTheWeek:  toInternalWeekday(settings.FirstDayOfTheWeek).String(),
-		UserID:             auth.GetUser(ctx).ID,
-		DateLocale:         toInternalDateLocale(settings.DateLocale),
-		DateTimeInputStyle: toInternalDateTimeInputStyle(settings.DateTimeInputStyle),
+		Theme:               toInternalTheme(settings.Theme),
+		FirstDayOfTheWeek:   toInternalWeekday(settings.FirstDayOfTheWeek).String(),
+		UserID:              auth.GetUser(ctx).ID,
+		DateLocale:          toInternalDateLocale(settings.DateLocale),
+		DateTimeInputStyle:  toInternalDateTimeInputStyle(settings.DateTimeInputStyle),
+		SidyFloatingEnabled: settings.SidyFloatingEnabled,
 	}
 
 	save := r.DB.Save(internal)
+
+	if save.Error == nil {
+		r.DB.Model(&model.UserSetting{UserID: internal.UserID}).
+			UpdateColumn("sidy_floating_enabled", internal.SidyFloatingEnabled)
+	}
 
 	return toExternal(internal), save.Error
 }
@@ -32,10 +38,11 @@ func (r *ResolverForSettings) UserSettings(ctx context.Context) (*gqlmodel.UserS
 
 func toExternal(internal model.UserSetting) *gqlmodel.UserSettings {
 	return &gqlmodel.UserSettings{
-		Theme:              toExternalTheme(internal.Theme),
-		DateLocale:         toExternalDateLocale(internal.DateLocale),
-		FirstDayOfTheWeek:  toExternalWeekday(internal.FirstDayOfTheWeekTimeWeekday()),
-		DateTimeInputStyle: toExternalDateTimeInputStyle(internal.DateTimeInputStyle),
+		Theme:               toExternalTheme(internal.Theme),
+		DateLocale:          toExternalDateLocale(internal.DateLocale),
+		FirstDayOfTheWeek:   toExternalWeekday(internal.FirstDayOfTheWeekTimeWeekday()),
+		DateTimeInputStyle:  toExternalDateTimeInputStyle(internal.DateTimeInputStyle),
+		SidyFloatingEnabled: internal.SidyFloatingEnabled,
 	}
 }
 

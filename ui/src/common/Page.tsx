@@ -35,6 +35,7 @@ import * as gqlDashboard from '../gql/dashboard';
 import {Dashboards} from '../gql/__generated__/Dashboards';
 import makeStyles from '@material-ui/core/styles/makeStyles';
 import {Route, RouteChildrenProps, Switch} from 'react-router';
+import {SidyFloatingButton} from '../sidy/SidyFloatingButton';
 
 const drawerWidth = 240;
 
@@ -307,6 +308,7 @@ export const Page: React.FC = ({children}) => {
             <main className={classes.content}>
                 <div className={classes.toolbar} />
                 {children}
+                <SidyFloatingButton />
             </main>
         </div>
     );

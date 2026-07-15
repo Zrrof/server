@@ -1,6 +1,6 @@
 import * as React from 'react';
 import makeStyles from '@material-ui/core/styles/makeStyles';
-import {Paper} from '@material-ui/core';
+import {Paper, FormControlLabel, Switch} from '@material-ui/core';
 import {SetSettings as SetSettingsGQL, Settings as SettingsGQL, useSettings} from '../gql/settings';
 import {useMutation} from '@apollo/react-hooks';
 import {SetSettings, SetSettingsVariables} from '../gql/__generated__/SetSettings';
@@ -148,6 +148,31 @@ export const SettingsPage: React.FC = () => {
                     ))}
                 </Select>
             </FormControl>
+            <FormControlLabel
+                control={
+                    <Switch
+                        checked={settings.sidyFloatingEnabled}
+                        onChange={(e) => {
+                            setSettings({
+                                variables: {
+                                    settings: {
+                                        ...settings,
+                                        sidyFloatingEnabled: e.target.checked,
+                                    },
+                                },
+                            })
+                                .then(() =>
+                                    enqueueSnackbar('sidy floating button changed', {
+                                        variant: 'success',
+                                    })
+                                )
+                                .catch(handleError('set sidy floating button', enqueueSnackbar));
+                        }}
+                    />
+                }
+                label="Sidy Floating Button (immer sichtbar)"
+                style={{marginTop: 16, marginLeft: 0, width: '100%'}}
+            />
         </Paper>
     );
 };

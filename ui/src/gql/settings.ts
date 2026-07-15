@@ -11,6 +11,7 @@ export const Settings = gql`
             dateLocale
             firstDayOfTheWeek
             dateTimeInputStyle
+            sidyFloatingEnabled
         }
     }
 `;
@@ -20,6 +21,7 @@ export const SetSettings = gql`
         setUserSettings(settings: $settings) {
             theme
             dateTimeInputStyle
+            sidyFloatingEnabled
         }
     }
 `;
@@ -29,6 +31,7 @@ const defaultSettings = {
     dateLocale: DateLocale.American,
     firstDayOfTheWeek: WeekDay.Monday,
     dateTimeInputStyle: DateTimeInputStyle.Fancy,
+    sidyFloatingEnabled: false,
 } as const;
 
 export const useSettings = (): {done: boolean} & Omit<SettingsQueryResponse['userSettings'], '__typename'> => {

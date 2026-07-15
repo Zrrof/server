@@ -14,10 +14,11 @@ func Get(ctx context.Context, db *gorm.DB) (model.UserSetting, error) {
 	internal := model.UserSetting{}
 	user := auth.GetUser(ctx)
 	defaultSettings := model.UserSetting{
-		Theme:              model.ThemeZrrofviolet,
-		DateLocale:         model.DateLocaleAmerican,
-		FirstDayOfTheWeek:  time.Monday.String(),
-		DateTimeInputStyle: model.DateTimeInputFancy,
+		Theme:                model.ThemeZrrofviolet,
+		DateLocale:           model.DateLocaleAmerican,
+		FirstDayOfTheWeek:    time.Monday.String(),
+		DateTimeInputStyle:   model.DateTimeInputFancy,
+		SidyFloatingEnabled:  false,
 	}
 
 	if user == nil {
