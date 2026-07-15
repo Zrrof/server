@@ -8,6 +8,7 @@ import {
     Typography,
     Paper,
     CircularProgress,
+    TextField,
 } from '@material-ui/core';
 import {KeyboardDatePicker, KeyboardTimePicker} from '@material-ui/pickers';
 import moment from 'moment';
@@ -48,6 +49,7 @@ export const SidyDialog: React.FC<Props> = ({open, onClose}) => {
     const [tags, setTags] = React.useState<TagSelectorEntry[]>([]);
     const [start, setStart] = React.useState<moment.Moment>(moment().subtract(1, 'hour'));
     const [end, setEnd] = React.useState<moment.Moment>(moment());
+    const [note, setNote] = React.useState('');
     const [error, setError] = React.useState<string | null>(null);
     const [loading, setLoading] = React.useState(false);
 
@@ -67,6 +69,7 @@ export const SidyDialog: React.FC<Props> = ({open, onClose}) => {
             setTags([]);
             setStart(moment().subtract(1, 'hour'));
             setEnd(moment());
+            setNote('');
             setError(null);
             setLoading(false);
         }
@@ -99,7 +102,7 @@ export const SidyDialog: React.FC<Props> = ({open, onClose}) => {
                     start: inUserTz(start).format(),
                     end: inUserTz(end).format(),
                     tags: inputTags,
-                    note: '',
+                    note,
                 },
             });
             setStep('result');
@@ -130,7 +133,7 @@ export const SidyDialog: React.FC<Props> = ({open, onClose}) => {
                 <SidyStepIndicator step={step === 'result' ? 4 : step} />
 
                 {step === 1 ? (
-                    <div style={{minHeight: 200, display: 'flex', flexDirection: 'column', gap: 16}}>
+                    <div style={{display: 'flex', flexDirection: 'column', gap: 16}}>
                         <Typography align="center" variant="subtitle1" style={{fontWeight: 500}}>
                             Schritt 1: Wählen Sie die Tags
                         </Typography>
@@ -143,6 +146,15 @@ export const SidyDialog: React.FC<Props> = ({open, onClose}) => {
                         <Typography variant="body2" color="textSecondary" align="center">
                             Geben Sie Tags ein, z.B. "Projekt:A" oder "Homeoffice"
                         </Typography>
+                        <TextField
+                            label="Notiz (optional)"
+                            value={note}
+                            onChange={(e) => setNote(e.target.value)}
+                            multiline
+                            rows={3}
+                            variant="outlined"
+                            fullWidth
+                        />
                     </div>
                 ) : null}
 
@@ -234,6 +246,7 @@ export const SidyDialog: React.FC<Props> = ({open, onClose}) => {
                                         <div><strong>Start:</strong> {fmtDate(start)} {fmtTime(start)}</div>
                                         <div><strong>Ende:</strong> {fmtDate(end)} {fmtTime(end)}</div>
                                         <div><strong>Dauer:</strong> {durationStr()}</div>
+                                        {note ? <div><strong>Notiz:</strong> {note}</div> : null}
                                     </div>
                                 </Paper>
                             </>

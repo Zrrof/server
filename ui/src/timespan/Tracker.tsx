@@ -3,7 +3,7 @@ import {TagSelectorEntry} from '../tag/tagSelectorEntry';
 import {TagSelector} from '../tag/TagSelector';
 import moment from 'moment-timezone';
 import {Button} from '@material-ui/core';
-import {MoreVert, Alarm} from '@material-ui/icons';
+import {MoreVert} from '@material-ui/icons';
 import IconButton from '@material-ui/core/IconButton';
 import Paper from '@material-ui/core/Paper';
 import Menu from '@material-ui/core/Menu';
@@ -18,8 +18,6 @@ import {AddTimeSpan, AddTimeSpanVariables} from '../gql/__generated__/AddTimeSpa
 import {useSnackbar} from 'notistack';
 import {inUserTz} from './timeutils';
 import {addTimeSpanToCache} from '../gql/utils';
-import {SidyDialog} from '../sidy/SidyDialog';
-import {useSettings} from '../gql/settings';
 
 enum Type {
     Tracker,
@@ -42,8 +40,6 @@ export const Tracker: React.FC<TrackerProps> = ({selectedEntries, onSelectedEntr
     const [from, setFrom] = React.useState<moment.Moment>(moment().subtract(15, 'minute'));
     const [to, setTo] = React.useState<moment.Moment>(moment());
     const [showDate, setShowDate] = React.useState(false);
-    const [sidyOpen, setSidyOpen] = React.useState(false);
-    const {dateTimeInputStyle} = useSettings();
     const [startTimer] = useMutation<StartTimer, StartTimerVariables>(gqlTimeSpan.StartTimer, {
         refetchQueries: [{query: gqlTimeSpan.Trackers}],
     });
@@ -91,17 +87,7 @@ export const Tracker: React.FC<TrackerProps> = ({selectedEntries, onSelectedEntr
                         onCtrlEnter={submit}
                     />
                 </div>
-                {type === Type.Manual && dateTimeInputStyle === 'Sidy' ? (
-                    <Button
-                        variant="outlined"
-                        color="primary"
-                        startIcon={<Alarm />}
-                        onClick={() => setSidyOpen(true)}
-                        style={{height: 50, whiteSpace: 'nowrap'}}
-                    >
-                        Zeit manuell eintragen
-                    </Button>
-                ) : type === Type.Manual ? (
+                {type === Type.Manual ? (
                     <div>
                         <DateTimeSelector
                             selectedDate={from}
@@ -141,11 +127,9 @@ export const Tracker: React.FC<TrackerProps> = ({selectedEntries, onSelectedEntr
                         />
                     </div>
                 ) : null}
-                {type === Type.Manual && dateTimeInputStyle === 'Sidy' ? null : (
-                    <Button variant="text" style={{height: 50}} onClick={submit}>
-                        {type === Type.Manual ? 'add' : 'start'}
-                    </Button>
-                )}
+                <Button variant="text" style={{height: 50}} onClick={submit}>
+                    {type === Type.Manual ? 'add' : 'start'}
+                </Button>
                 <IconButton onClick={(e: React.MouseEvent<HTMLElement>) => setOpenMenu(e.currentTarget)}>
                     <MoreVert />
                 </IconButton>
@@ -167,7 +151,6 @@ export const Tracker: React.FC<TrackerProps> = ({selectedEntries, onSelectedEntr
                         Manual
                     </MenuItem>
                 </Menu>
-                <SidyDialog open={sidyOpen} onClose={() => setSidyOpen(false)} />
             </Paper>
         </ClickAwayListener>
     );
