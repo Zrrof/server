@@ -127,7 +127,7 @@ export const SidyDialog: React.FC<Props> = ({open, onClose}) => {
     return (
         <Dialog open={open} maxWidth="sm" fullWidth onClose={onClose}>
             <DialogTitle style={{textAlign: 'center', paddingBottom: 0}}>
-                <span style={{fontWeight: 600}}>Sidy — Zeiteintrag</span>
+                <span style={{fontWeight: 600}}>Zeiteintrag</span>
             </DialogTitle>
             <DialogContent style={{paddingTop: 16, minHeight: 320}}>
                 <SidyStepIndicator step={step === 'result' ? 4 : step} />

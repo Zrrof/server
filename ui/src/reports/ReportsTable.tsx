@@ -27,6 +27,20 @@ const sortable: Record<string, SortKey> = {
     tags: 'tags',
 };
 
+const COLUMN_WIDTHS: Record<string, string> = {
+    date: '12%',
+    start: '8%',
+    end: '8%',
+    duration: '10%',
+    tags: '30%',
+    description: '32%',
+};
+
+const cellStyle: React.CSSProperties = {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+};
+
 export const ReportsTable: React.FC<{
     entries: ReportTimeSpan[];
     columns: ReportColumn[];
@@ -84,7 +98,7 @@ export const ReportsTable: React.FC<{
     const entryRow = (entry: ReportTimeSpan) => (
         <TableRow key={entry.id}>
             {visibleColumns.map((column) => (
-                <TableCell key={column.id}>{render(entry, column.id)}</TableCell>
+                <TableCell key={column.id} style={{...cellStyle, width: COLUMN_WIDTHS[column.id]}}>{render(entry, column.id)}</TableCell>
             ))}
         </TableRow>
     );
@@ -146,14 +160,17 @@ export const ReportsTable: React.FC<{
                     </label>
                 ))}
             </div>
-            <Table size="small">
+            <Table size="small" style={{tableLayout: 'fixed'}}>
                 <TableHead>
                     <TableRow>
                         {visibleColumns.map((column) => (
                             <TableCell
                                 key={column.id}
                                 onClick={() => cycleSort(column.id)}
-                                style={{cursor: sortable[column.id] ? 'pointer' : 'default', whiteSpace: 'nowrap'}}>
+                                style={{
+                                    cursor: sortable[column.id] ? 'pointer' : 'default',
+                                    width: COLUMN_WIDTHS[column.id],
+                                }}>
                                 {column.label}{' '}
                                 {sort && sortable[column.id] === sort.key ? (sort.direction === 'asc' ? '↑' : '↓') : ''}
                             </TableCell>
