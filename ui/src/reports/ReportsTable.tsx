@@ -1,10 +1,13 @@
 import * as React from 'react';
 import moment from 'moment';
 import {
+    Box,
     Button,
     Checkbox,
     Chip,
+    Collapse,
     FormControl,
+    IconButton,
     InputLabel,
     MenuItem,
     Paper,
@@ -14,32 +17,14 @@ import {
     TableCell,
     TableHead,
     TableRow,
+    Typography,
+    useTheme,
 } from '@material-ui/core';
+import {KeyboardArrowDown, KeyboardArrowRight} from '@material-ui/icons';
 import {GroupKey, ReportColumn, ReportSort, ReportTimeSpan, SortKey} from './types';
 import {durationMs, formatDuration, groupEntries} from './utils/reportUtils';
 
-const sortable: Record<string, SortKey> = {
-    date: 'date',
-    start: 'start',
-    end: 'end',
-    duration: 'duration',
-    description: 'description',
-    tags: 'tags',
-};
-
-const COLUMN_WIDTHS: Record<string, string> = {
-    date: '12%',
-    start: '8%',
-    end: '8%',
-    duration: '10%',
-    tags: '30%',
-    description: '32%',
-};
-
-const cellStyle: React.CSSProperties = {
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-};
+const BASE_COLUMNS = ['date', 'start', 'end'];
 
 export const ReportsTable: React.FC<{
     entries: ReportTimeSpan[];
@@ -54,15 +39,29 @@ export const ReportsTable: React.FC<{
     onCollapsedGroups: (collapsedGroups: string[]) => void;
 }> = ({entries, columns, pageSize, sort, groupBy, collapsedGroups, onSort, onPageSize, onColumns, onCollapsedGroups}) => {
     const [page, setPage] = React.useState(0);
+    const [expanded, setExpanded] = React.useState<Set<number>>(new Set());
+    const theme = useTheme();
     React.useEffect(() => setPage(0), [entries, pageSize, groupBy]);
-    const visibleColumns = columns.filter((column) => column.visible);
+
+    const detailColumns = columns.filter((c) => c.visible && BASE_COLUMNS.indexOf(c.id) === -1);
+
     const paged = groupBy !== 'none' || pageSize === 'all' ? entries : entries.slice(page * pageSize, page * pageSize + pageSize);
     const groups = groupEntries(paged, groupBy);
+
+    const toggleExpand = (id: number) => {
+        setExpanded((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+    };
+
     const cycleSort = (id: string) => {
-        const key = sortable[id];
-        if (!key) {
-            return;
-        }
+        const key = (id === 'time' ? 'start' : id) as SortKey;
         if (!sort || sort.key !== key) {
             onSort({key, direction: 'asc'});
         } else if (sort.direction === 'asc') {
@@ -71,43 +70,98 @@ export const ReportsTable: React.FC<{
             onSort(null);
         }
     };
-    const render = (entry: ReportTimeSpan, id: string) => {
+
+    const renderDetail = (id: string, entry: ReportTimeSpan) => {
         switch (id) {
-            case 'date':
-                return moment(entry.start).format('DD.MM.YYYY');
-            case 'start':
-                return moment(entry.start).format('HH:mm');
-            case 'end':
-                return entry.end ? moment(entry.end).format('HH:mm') : 'läuft';
             case 'duration':
-                return formatDuration(durationMs(entry));
+                return (
+                    <Box>
+                        <Typography variant="caption" color="textSecondary">Dauer</Typography>
+                        <Typography variant="body1" style={{fontWeight: 600}}>{formatDuration(durationMs(entry))}</Typography>
+                    </Box>
+                );
             case 'tags':
-                return !entry.tags || entry.tags.length === 0 ? '' : (
-                    <div style={{display: 'flex', gap: 4, flexWrap: 'wrap'}}>
-                        {entry.tags.map((tag, i) => (
-                            <Chip key={i} label={tag.value} size="small" style={{backgroundColor: '#bbf7d0', color: '#166534'}} />
-                        ))}
-                    </div>
+                return !entry.tags || entry.tags.length === 0 ? null : (
+                    <Box>
+                        <Typography variant="caption" color="textSecondary">Tags</Typography>
+                        <Box style={{display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 2}}>
+                            {entry.tags.map((tag, i) => (
+                                <Chip key={i} label={tag.value} size="small" style={{backgroundColor: '#bbf7d0', color: '#166534'}} />
+                            ))}
+                        </Box>
+                    </Box>
                 );
             case 'description':
-                return entry.note;
+                return !entry.note ? null : (
+                    <Box>
+                        <Typography variant="caption" color="textSecondary">Notiz</Typography>
+                        <Typography variant="body2" color="textPrimary">{entry.note}</Typography>
+                    </Box>
+                );
             default:
-                return '';
+                return null;
         }
     };
-    const entryRow = (entry: ReportTimeSpan) => (
-        <TableRow key={entry.id}>
-            {visibleColumns.map((column) => (
-                <TableCell key={column.id} style={{...cellStyle, width: COLUMN_WIDTHS[column.id]}}>{render(entry, column.id)}</TableCell>
-            ))}
-        </TableRow>
-    );
+
+    const entryRow = (entry: ReportTimeSpan) => {
+        const isExpanded = expanded.has(entry.id);
+        return (
+            <React.Fragment key={entry.id}>
+                <TableRow
+                    hover
+                    onClick={() => toggleExpand(entry.id)}
+                    style={{cursor: 'pointer'}}
+                >
+                    <TableCell style={{width: '40%', borderBottom: isExpanded ? 'none' : undefined}}>
+                        {moment(entry.start).format('DD.MM.YYYY')}
+                    </TableCell>
+                    <TableCell style={{width: '50%', borderBottom: isExpanded ? 'none' : undefined}}>
+                        {moment(entry.start).format('HH:mm')} – {entry.end ? moment(entry.end).format('HH:mm') : 'läuft'}
+                    </TableCell>
+                    <TableCell style={{width: '10%', textAlign: 'right', borderBottom: isExpanded ? 'none' : undefined}}>
+                        <IconButton size="small" onClick={(e) => { e.stopPropagation(); toggleExpand(entry.id); }}>
+                            {isExpanded ? <KeyboardArrowDown /> : <KeyboardArrowRight />}
+                        </IconButton>
+                    </TableCell>
+                </TableRow>
+                <TableRow>
+                    <TableCell
+                        colSpan={3}
+                        style={{padding: 0, borderBottom: isExpanded ? undefined : 'none'}}
+                    >
+                        <Collapse in={isExpanded} timeout={200} unmountOnExit>
+                            <Box style={{
+                                padding: theme.spacing(2),
+                                paddingTop: 0,
+                                backgroundColor: theme.palette.action.hover,
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: theme.spacing(3),
+                            }}>
+                                {detailColumns.map((col) => (
+                                    <Box key={col.id} style={{minWidth: 140, flex: '1 1 auto'}}>
+                                        {renderDetail(col.id, entry)}
+                                    </Box>
+                                ))}
+                                {detailColumns.length === 0 ? (
+                                    <Typography variant="body2" color="textSecondary">
+                                        Keine Details ausgewählt. Aktivieren Sie Spalten über die Checkboxen.
+                                    </Typography>
+                                ) : null}
+                            </Box>
+                        </Collapse>
+                    </TableCell>
+                </TableRow>
+            </React.Fragment>
+        );
+    };
+
     const groupedRows = groups.map((group) => {
         const collapsed = collapsedGroups.indexOf(group.key) >= 0;
         return (
             <React.Fragment key={group.key}>
                 <TableRow>
-                    <TableCell colSpan={Math.max(1, visibleColumns.length)}>
+                    <TableCell colSpan={3}>
                         <button
                             type="button"
                             aria-expanded={!collapsed}
@@ -127,11 +181,12 @@ export const ReportsTable: React.FC<{
             </React.Fragment>
         );
     });
+
     return (
-        <Paper style={{marginTop: 16, overflowX: 'auto'}}>
-            <div style={{display: 'flex', gap: 16, padding: 12, flexWrap: 'wrap'}} className="reports-no-print">
+        <Paper style={{marginTop: 16}}>
+            <Box style={{display: 'flex', gap: 16, padding: 12, flexWrap: 'wrap', alignItems: 'center'}} className="reports-no-print">
                 {groupBy === 'none' ? (
-                    <FormControl>
+                    <FormControl style={{minWidth: 120}}>
                         <InputLabel>Seitengröße</InputLabel>
                         <Select
                             value={String(pageSize)}
@@ -147,50 +202,53 @@ export const ReportsTable: React.FC<{
                         </Select>
                     </FormControl>
                 ) : null}
-                {columns.map((column) => (
-                    <label key={column.id} style={{display: 'flex', alignItems: 'center'}}>
-                        <Checkbox
-                            checked={column.visible}
-                            style={{color: '#22c55e'}}
-                            onChange={(e) =>
-                                onColumns(columns.map((c) => (c.id === column.id ? {...c, visible: e.target.checked} : c)))
-                            }
-                        />
-                        {column.label}
-                    </label>
-                ))}
-            </div>
-            <Table size="small" style={{tableLayout: 'fixed'}}>
+                <Box style={{display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center'}}>
+                    {columns.map((column) => (
+                        <label key={column.id} style={{display: 'flex', alignItems: 'center', cursor: 'pointer'}}>
+                            <Checkbox
+                                checked={column.visible}
+                                style={{color: '#22c55e', padding: 4}}
+                                onChange={(e) =>
+                                    onColumns(columns.map((c) => (c.id === column.id ? {...c, visible: e.target.checked} : c)))
+                                }
+                            />
+                            <Typography variant="body2">{column.label}</Typography>
+                        </label>
+                    ))}
+                </Box>
+            </Box>
+            <Table size="small">
                 <TableHead>
                     <TableRow>
-                        {visibleColumns.map((column) => (
-                            <TableCell
-                                key={column.id}
-                                onClick={() => cycleSort(column.id)}
-                                style={{
-                                    cursor: sortable[column.id] ? 'pointer' : 'default',
-                                    width: COLUMN_WIDTHS[column.id],
-                                }}>
-                                {column.label}{' '}
-                                {sort && sortable[column.id] === sort.key ? (sort.direction === 'asc' ? '↑' : '↓') : ''}
-                            </TableCell>
-                        ))}
+                        <TableCell
+                            onClick={() => cycleSort('date')}
+                            style={{cursor: 'pointer', width: '40%', fontWeight: 600}}
+                        >
+                            Datum {sort && sort.key === 'date' ? (sort.direction === 'asc' ? '↑' : '↓') : ''}
+                        </TableCell>
+                        <TableCell
+                            onClick={() => cycleSort('time')}
+                            style={{cursor: 'pointer', width: '50%', fontWeight: 600}}
+                        >
+                            Zeit {sort && sort.key === 'start' ? (sort.direction === 'asc' ? '↑' : '↓') : ''}
+                        </TableCell>
+                        <TableCell style={{width: '10%'}} />
                     </TableRow>
                 </TableHead>
                 <TableBody>{groupBy === 'none' ? paged.map(entryRow) : groupedRows}</TableBody>
             </Table>
             {groupBy === 'none' && pageSize !== 'all' ? (
-                <div className="reports-no-print" style={{padding: 12, display: 'flex', alignItems: 'center', gap: 8}}>
+                <Box className="reports-no-print" style={{padding: 12, display: 'flex', alignItems: 'center', gap: 8}}>
                     <Button size="small" disabled={page === 0} onClick={() => setPage(page - 1)}>
                         ← Zurück
                     </Button>
-                    <span>
+                    <Typography variant="body2">
                         Seite {page + 1} / {Math.max(1, Math.ceil(entries.length / pageSize))}
-                    </span>
+                    </Typography>
                     <Button size="small" disabled={(page + 1) * pageSize >= entries.length} onClick={() => setPage(page + 1)}>
                         Weiter →
                     </Button>
-                </div>
+                </Box>
             ) : null}
         </Paper>
     );
